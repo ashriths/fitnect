@@ -3,7 +3,6 @@
 
 # User-specific files
 *.suo
-*.user
 *.sln.docstates
 
 # Build results
@@ -190,3 +189,6 @@ git_stats/*
 StyleCop.Cache
 bin
 obj
+
+*/bin/*
+*/Debug/*
