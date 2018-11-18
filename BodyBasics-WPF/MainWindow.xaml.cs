@@ -382,77 +382,31 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             return (double)Math.Acos(dotProduct) / Math.PI * 180;
         }
 
-
-        private double GetRightArmAngle(IReadOnlyDictionary<JointType, Joint> joints)
+        private double GetAngleBetweenJoints(JointType a, JointType b, JointType c, IReadOnlyDictionary<JointType, Joint> joints)
         {
-            if (joints.ContainsKey(JointType.ElbowRight) && joints.ContainsKey(JointType.WristRight) && joints.ContainsKey(JointType.ShoulderRight))
+            if (joints.ContainsKey(a) && joints.ContainsKey(b) && joints.ContainsKey(c))
             {
-                Vector3D elbow = new Vector3D(joints[JointType.ElbowRight].Position.X, joints[JointType.ElbowRight].Position.Y, joints[JointType.ElbowRight].Position.Z);
-                Vector3D shoulder = new Vector3D(joints[JointType.ShoulderRight].Position.X, joints[JointType.ShoulderRight].Position.Y, joints[JointType.ShoulderRight].Position.Z);
-                Vector3D wrist = new Vector3D(joints[JointType.WristRight].Position.X, joints[JointType.WristRight].Position.Y, joints[JointType.WristRight].Position.Z);
-                return this.AngleBetweenTwoVectors(elbow - shoulder, elbow - wrist);
+                Vector3D boneA = new Vector3D(joints[a].Position.X, joints[a].Position.Y, joints[a].Position.Z);
+                Vector3D boneB = new Vector3D(joints[b].Position.X, joints[b].Position.Y, joints[b].Position.Z);
+                Vector3D boneC = new Vector3D(joints[c].Position.X, joints[c].Position.Y, joints[c].Position.Z);
+                return this.AngleBetweenTwoVectors(boneA - boneB, boneA - boneC);
             }
             return 0.0;
         }
 
-        private double GetLeftArmAngle(IReadOnlyDictionary<JointType, Joint> joints)
+        private IDictionary<string, double> GetInterstedJointAngles(IReadOnlyDictionary<JointType, Joint> joints)
         {
-            if (joints.ContainsKey(JointType.ElbowLeft) && joints.ContainsKey(JointType.WristLeft) && joints.ContainsKey(JointType.ShoulderLeft))
-            {
-                Vector3D elbow = new Vector3D(joints[JointType.ElbowLeft].Position.X, joints[JointType.ElbowLeft].Position.Y, joints[JointType.ElbowLeft].Position.Z);
-                Vector3D shoulder = new Vector3D(joints[JointType.ShoulderLeft].Position.X, joints[JointType.ShoulderLeft].Position.Y, joints[JointType.ShoulderLeft].Position.Z);
-                Vector3D wrist = new Vector3D(joints[JointType.WristLeft].Position.X, joints[JointType.WristLeft].Position.Y, joints[JointType.WristLeft].Position.Z);
-                return this.AngleBetweenTwoVectors(elbow - shoulder, elbow - wrist);
+            IDictionary<string, List<JointType>> interestedJoints = new Dictionary<string, List<JointType>>{
+                { "RightArm", new List<JointType>{JointType.ElbowRight, JointType.WristRight, JointType.ShoulderRight}},
+                { "LeftArm", new List<JointType>{JointType.ElbowLeft, JointType.WristLeft, JointType.ShoulderLeft}} ,
+                { "RightLeg", new List<JointType>{JointType.SpineBase, JointType.HipRight, JointType.KneeRight}} ,
+                { "LeftLeg", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.KneeLeft}} 
+            };
+            IDictionary<string, double> interestedJointAngles = new Dictionary<string, double>();
+            foreach (KeyValuePair<string, List<JointType>> kv in interestedJoints) {
+                interestedJointAngles.Add(kv.Key, this.GetAngleBetweenJoints(kv.Value[0], kv.Value[1], kv.Value[2], joints));
             }
-            return 0.0;
-        }
-
-        private double GetRightWaistAngle(IReadOnlyDictionary<JointType, Joint> joints)
-        {
-            if (joints.ContainsKey(JointType.HipRight) && joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.SpineMid))
-            {
-                Vector3D hip = new Vector3D(joints[JointType.HipRight].Position.X, joints[JointType.HipRight].Position.Y, joints[JointType.HipRight].Position.Z);
-                Vector3D spinebase = new Vector3D(joints[JointType.SpineBase].Position.X, joints[JointType.SpineBase].Position.Y, joints[JointType.SpineBase].Position.Z);
-                Vector3D spinemid = new Vector3D(joints[JointType.SpineMid].Position.X, joints[JointType.SpineMid].Position.Y, joints[JointType.SpineMid].Position.Z);
-                return this.AngleBetweenTwoVectors(spinebase - hip, spinebase - spinemid);
-            }
-            return 0.0;
-        }
-
-        private double GetLeftWaistAngle(IReadOnlyDictionary<JointType, Joint> joints)
-        {
-            if (joints.ContainsKey(JointType.HipLeft) && joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.SpineMid))
-            {
-                Vector3D hip = new Vector3D(joints[JointType.HipLeft].Position.X, joints[JointType.HipLeft].Position.Y, joints[JointType.HipLeft].Position.Z);
-                Vector3D spinebase = new Vector3D(joints[JointType.SpineBase].Position.X, joints[JointType.SpineBase].Position.Y, joints[JointType.SpineBase].Position.Z);
-                Vector3D spinemid = new Vector3D(joints[JointType.SpineMid].Position.X, joints[JointType.SpineMid].Position.Y, joints[JointType.SpineMid].Position.Z);
-                return this.AngleBetweenTwoVectors(spinebase - hip, spinebase - spinemid);
-            }
-            return 0.0;
-        }
-
-        private double GetRightLegAngle(IReadOnlyDictionary<JointType, Joint> joints)
-        {
-            if (joints.ContainsKey(JointType.HipRight) && joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.KneeRight))
-            {
-                Vector3D hip = new Vector3D(joints[JointType.HipRight].Position.X, joints[JointType.HipRight].Position.Y, joints[JointType.HipRight].Position.Z);
-                Vector3D spinebase = new Vector3D(joints[JointType.SpineBase].Position.X, joints[JointType.SpineBase].Position.Y, joints[JointType.SpineBase].Position.Z);
-                Vector3D knee = new Vector3D(joints[JointType.KneeRight].Position.X, joints[JointType.KneeRight].Position.Y, joints[JointType.KneeRight].Position.Z);
-                return this.AngleBetweenTwoVectors(hip - knee, hip - spinebase);
-            }
-            return 0.0;
-        }
-
-        private double GetLeftLegAngle(IReadOnlyDictionary<JointType, Joint> joints)
-        {
-            if (joints.ContainsKey(JointType.HipRight) && joints.ContainsKey(JointType.SpineBase) && joints.ContainsKey(JointType.KneeRight))
-            {
-                Vector3D hip = new Vector3D(joints[JointType.HipLeft].Position.X, joints[JointType.HipLeft].Position.Y, joints[JointType.HipLeft].Position.Z);
-                Vector3D spinebase = new Vector3D(joints[JointType.SpineBase].Position.X, joints[JointType.SpineBase].Position.Y, joints[JointType.SpineBase].Position.Z);
-                Vector3D knee = new Vector3D(joints[JointType.KneeLeft].Position.X, joints[JointType.KneeLeft].Position.Y, joints[JointType.KneeLeft].Position.Z);
-                return this.AngleBetweenTwoVectors(hip - knee, hip - spinebase);
-            }
-            return 0.0;
+            return interestedJointAngles;
         }
 
         /// <summary>
@@ -464,83 +418,26 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="drawingPen">specifies color to draw a specific body</param>
         private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
         {
-            double rightArmAngle = this.GetRightArmAngle(joints);
-            if (rightArmAngle > 0.0)
-            {
-                drawingContext.DrawText(
-                    new FormattedText("RA:" + rightArmAngle.ToString(),
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    36, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(0, 0)
-                );
-            }
 
-            double leftArmAngle = this.GetLeftArmAngle(joints);
-            if (leftArmAngle > 0.0)
+            IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
+            const int TEXTWIDTH = 30;
+            int start = -TEXTWIDTH;
+            foreach (KeyValuePair<string, double> kv in interestedJointAngles)
             {
-                drawingContext.DrawText(
-                    new FormattedText("LA:" + leftArmAngle.ToString(),
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    36, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(0, 116)
-                );
+                if (kv.Value > 0.0)
+                {
+                    drawingContext.DrawText(
+                        new FormattedText(  kv.Key.PadLeft(10, ' ') + "    " +kv.Value.ToString(),
+                        CultureInfo.GetCultureInfo("en-us"),
+                        FlowDirection.LeftToRight,
+                        new Typeface("Verdana"),
+                        12, System.Windows.Media.Brushes.White),
+                        new System.Windows.Point(0, start + TEXTWIDTH)
+                    );
+                    start += TEXTWIDTH;
+                }
             }
-
-            /*double leftWaistAngle = this.GetLeftWaistAngle(joints);
-            if (leftWaistAngle > 0.0)
-            {
-                drawingContext.DrawText(
-                    new FormattedText("LWA:" + leftWaistAngle.ToString(),
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    36, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(0, 216)
-                );
-            }
-
-            double rightWaistAngle = this.GetRightWaistAngle(joints);
-            if (rightWaistAngle > 0.0)
-            {
-                drawingContext.DrawText(
-                    new FormattedText("RWA:" + rightWaistAngle.ToString(),
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    36, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(0, 316)
-                );
-            }*/
-
-            double leftLegAngle = this.GetLeftLegAngle(joints);
-            if (leftLegAngle > 0.0)
-            {
-                drawingContext.DrawText(
-                    new FormattedText("LLA:" + leftLegAngle.ToString(),
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    36, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(0, 216)
-                );
-            }
-
-            double rightLegAngle = this.GetRightLegAngle(joints);
-            if (rightLegAngle > 0.0)
-            {
-                drawingContext.DrawText(
-                    new FormattedText("RLA:" + rightLegAngle.ToString(),
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    36, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(0, 316)
-                );
-            }
+          
 
             // Draw the bones
             foreach (var bone in this.bones)
