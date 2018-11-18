@@ -128,6 +128,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private string statusText = null;
 
+        const int TEXTWIDTH = 30;
+
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
         /// </summary>
@@ -409,6 +411,54 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             return interestedJointAngles;
         }
 
+        public void PrintWarnings(List<String> warnings, DrawingContext drawingContext)
+        {
+            int yStart = displayHeight - 100 - TEXTWIDTH;
+            foreach (string warn in warnings) {
+                drawingContext.DrawText(
+                        new FormattedText(warn,
+                        CultureInfo.GetCultureInfo("en-us"),
+                        FlowDirection.LeftToRight,
+                        new Typeface("Verdana"),
+                        10, System.Windows.Media.Brushes.White),
+                        new System.Windows.Point(0, yStart + TEXTWIDTH)
+                    );
+                yStart -= TEXTWIDTH;
+            }
+        }
+
+        public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles) {
+            List<string> warnings = new List<string>();
+            if (interestedJointAngles.ContainsKey("RightArm"))
+            {
+                if (interestedJointAngles["RightArm"] < 110.00) {
+                    warnings.Add("Right Arm is not straight.");
+                } 
+            }
+            if (interestedJointAngles.ContainsKey("LeftArm"))
+            {
+                if (interestedJointAngles["LeftArm"] < 110.00)
+                {
+                    warnings.Add("Left Arm is not straight.");
+                }
+            }
+            /*if (interestedJointAngles.ContainsKey("RightLeg"))
+            {
+                if (interestedJointAngles["RightLeg"] > 50.00)
+                {
+                    warnings.Add("You are not moving your Right Leg");
+                }
+            }
+            if (interestedJointAngles.ContainsKey("LeftLeg"))
+            {
+                if (interestedJointAngles["LeftLeg"] > 50.00)
+                {
+                    warnings.Add("You are not moving your Left Leg");
+                }
+            }*/
+            return warnings;
+        }
+
         /// <summary>
         /// Draws a body
         /// </summary>
@@ -420,7 +470,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
 
             IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
-            const int TEXTWIDTH = 30;
             int start = -TEXTWIDTH;
             foreach (KeyValuePair<string, double> kv in interestedJointAngles)
             {
@@ -437,6 +486,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     start += TEXTWIDTH;
                 }
             }
+
+            List<string> warnings = this.CheckForWrongPosture(interestedJointAngles);
+            this.PrintWarnings(warnings, drawingContext);
           
 
             // Draw the bones
