@@ -26,12 +26,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <summary>
         /// Radius of drawn hand circles
         /// </summary>
-        private const double HandSize = 10;
-
-        /// <summary>
-        /// Radius of drawn joint circles
-        /// </summary>
-        private const double jointSize = 20;
+        private const double HandSize = 30;
 
         /// <summary>
         /// Thickness of drawn joint lines
@@ -47,11 +42,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Constant for clamping Z values of camera space points from being negative
         /// </summary>
         private const float InferredZPositionClamp = 0.1f;
-
-        /// <summary>
-        /// Brush used for drawing joints that are moving at wrong angle
-        /// </summary>
-        private readonly Brush jointWrongBrush = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
 
         /// <summary>
         /// Brush used for drawing hands that are currently tracked as closed
@@ -421,23 +411,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             return interestedJointAngles;
         }
 
-        public void PrintJointWarnings(String warnings, DrawingContext drawingContext, Point point)
-        {
-            int yStart = displayHeight - 100 - TEXTWIDTH;
-
-            drawingContext.DrawText(
-                    new FormattedText(warnings,
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface("Verdana"),
-                    10, System.Windows.Media.Brushes.White),
-                    new System.Windows.Point(point.X, point.Y + TEXTWIDTH)
-                );
-            yStart -= TEXTWIDTH;
- 
-        }
-
-
         public void PrintWarnings(List<String> warnings, DrawingContext drawingContext)
         {
             int yStart = displayHeight - 100 - TEXTWIDTH;
@@ -454,26 +427,21 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
         }
 
-        public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext) {
+        public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles) {
             List<string> warnings = new List<string>();
             if (interestedJointAngles.ContainsKey("RightArm"))
             {
                 if (interestedJointAngles["RightArm"] < 110.00) {
                     warnings.Add("Right Arm is not straight.");
-                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ElbowRight], jointSize, jointSize);
-                    PrintJointWarnings("Keep Arm straight!", drawingContext, jointPoints[JointType.ElbowRight]);
-                }
+                } 
             }
             if (interestedJointAngles.ContainsKey("LeftArm"))
             {
                 if (interestedJointAngles["LeftArm"] < 110.00)
                 {
                     warnings.Add("Left Arm is not straight.");
-                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ElbowLeft], jointSize, jointSize);
-                    PrintJointWarnings("Keep Arm straight!", drawingContext, jointPoints[JointType.ElbowLeft]);
                 }
             }
-
             /*if (interestedJointAngles.ContainsKey("RightLeg"))
             {
                 if (interestedJointAngles["RightLeg"] > 50.00)
@@ -519,7 +487,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 }
             }
 
-            List<string> warnings = this.CheckForWrongPosture(interestedJointAngles, jointPoints, drawingContext);
+            List<string> warnings = this.CheckForWrongPosture(interestedJointAngles);
             this.PrintWarnings(warnings, drawingContext);
           
 
@@ -552,7 +520,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
         }
 
-        /// <summary>stra
+        /// <summary>
         /// Draws one bone of a body (joint to joint)
         /// </summary>
         /// <param name="joints">joints to draw</param>
