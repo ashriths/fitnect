@@ -161,7 +161,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
-            
+
             // populate body colors, one for each BodyIndex
             this.bodyColors = new List<Pen>();
 
@@ -329,9 +329,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                             }
-                            
+
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
-                            
+
 
 
                         }
@@ -349,7 +349,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="handPosition">position of the hand</param>
         private void DrawHand(HandState handState, Point handPosition)
         {
-            System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)Math.Round(handPosition.X), (int)Math.Round(handPosition.Y));
+            //System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)Math.Round(handPosition.X), (int)Math.Round(handPosition.Y));
             switch (handState)
             {
                 case HandState.Closed:

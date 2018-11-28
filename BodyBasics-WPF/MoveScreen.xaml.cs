@@ -140,6 +140,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         const int TEXTWIDTH = 30;
 
+        public static int prevExerciseState = 0;
+        public static int exerciseState = 0;
+        public static int reps = 0;
+
         /// <summary>
         /// Initializes a new instance of the MoveScreen class.
         /// </summary>
@@ -370,11 +374,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                             }
-
-                            this.DrawBody(joints, jointPoints, dc, drawPen);
+                            IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
+                            this.DrawBody(joints, jointPoints, dc, drawPen, interestedJointAngles);
 
                             this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
                             this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+                            exerciseState = this.getExerciseState(joints, jointPoints, dc, drawPen, interestedJointAngles);
+                            if (exerciseState != prevExerciseState)
+                            {
+                                reps += 1;
+                                prevExerciseState = exerciseState;
+                            }
                         }
                     }
 
@@ -392,6 +402,21 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             dotProduct = Vector3D.DotProduct(vectorA, vectorB);
 
             return (double)Math.Acos(dotProduct) / Math.PI * 180;
+        }
+
+        private int getExerciseState(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints,
+            DrawingContext drawingContext, Pen drawingPen, IDictionary<string, double> interestedJointAngles)
+        {
+            int e;
+            if (interestedJointAngles["RightShoulder"] < 140.00 && interestedJointAngles["LeftShoulder"] < 140.00)
+            {
+                return 0;
+            }
+            else if (interestedJointAngles["RightShoulder"] > 140.00 && interestedJointAngles["LeftShoulder"] > 140.00)
+            {
+                return 1;
+            }
+            else return exerciseState;
         }
 
         private double GetAngleBetweenJoints(JointType a, JointType b, JointType c, IReadOnlyDictionary<JointType, Joint> joints)
@@ -412,7 +437,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 { "RightArm", new List<JointType>{JointType.ElbowRight, JointType.WristRight, JointType.ShoulderRight}},
                 { "LeftArm", new List<JointType>{JointType.ElbowLeft, JointType.WristLeft, JointType.ShoulderLeft}} ,
                 { "RightLeg", new List<JointType>{JointType.SpineBase, JointType.HipRight, JointType.KneeRight}} ,
-                { "LeftLeg", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.KneeLeft}} 
+                { "LeftLeg", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.KneeLeft}} ,
+                { "LeftShoulder", new List<JointType>{JointType.SpineShoulder, JointType.ShoulderLeft, JointType.ElbowRight}} ,
+                { "RightShoulder", new List<JointType>{JointType.SpineShoulder, JointType.ShoulderRight, JointType.ElbowLeft}},
+                { "LeftHip", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.SpineMid}},
+                { "RightHip", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.SpineMid}}
+
             };
             IDictionary<string, double> interestedJointAngles = new Dictionary<string, double>();
             foreach (KeyValuePair<string, List<JointType>> kv in interestedJoints) {
@@ -474,11 +504,32 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 }
             }
 
+            if (interestedJointAngles.ContainsKey("RightShoulder"))
+            {
+                if (interestedJointAngles["RightShoulder"] < 110.00)
+                {
+                    warnings.Add("Right Arm is not straight.");
+                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ShoulderRight], jointSize, jointSize);
+                    PrintJointWarnings("Move Right Arm!", drawingContext, jointPoints[JointType.ShoulderRight]);
+                }
+            }
+            if (interestedJointAngles.ContainsKey("LeftShoulder"))
+            {
+                if (interestedJointAngles["LeftShoulder"] < 110.00)
+                {
+                    warnings.Add("Left Arm is not straight.");
+                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ShoulderLeft], jointSize, jointSize);
+                    PrintJointWarnings("Move Left Arm!", drawingContext, jointPoints[JointType.ShoulderLeft]);
+                }
+            }
+
             /*if (interestedJointAngles.ContainsKey("RightLeg"))
             {
                 if (interestedJointAngles["RightLeg"] > 50.00)
                 {
                     warnings.Add("You are not moving your Right Leg");
+                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.KneeRight], jointSize, jointSize);
+                    PrintJointWarnings("Move Right Leg", drawingContext, jointPoints[JointType.KneeRight]);
                 }
             }
             if (interestedJointAngles.ContainsKey("LeftLeg"))
@@ -486,6 +537,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 if (interestedJointAngles["LeftLeg"] > 50.00)
                 {
                     warnings.Add("You are not moving your Left Leg");
+                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.KneeLeft], jointSize, jointSize);
+                    PrintJointWarnings("Move Right Leg", drawingContext, jointPoints[JointType.KneeLeft]);
                 }
             }*/
             return warnings;
@@ -498,10 +551,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="jointPoints">translated positions of joints to draw</param>
         /// <param name="drawingContext">drawing context to draw to</param>
         /// <param name="drawingPen">specifies color to draw a specific body</param>
-        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
+        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, 
+            Pen drawingPen, IDictionary<string, double> interestedJointAngles)
         {
 
-            IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
+            
             int start = -TEXTWIDTH;
             foreach (KeyValuePair<string, double> kv in interestedJointAngles)
             {
@@ -519,8 +573,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 }
             }
 
+            drawingContext.DrawText(
+                        new FormattedText("Reps:".PadLeft(10, ' ') + "    " + (int)reps/4,
+                        CultureInfo.GetCultureInfo("en-us"),
+                        FlowDirection.LeftToRight,
+                        new Typeface("Verdana"),
+                        12, System.Windows.Media.Brushes.White),
+                        new System.Windows.Point(this.displayWidth - 100, 50)
+                    );
+
             List<string> warnings = this.CheckForWrongPosture(interestedJointAngles, jointPoints, drawingContext);
             this.PrintWarnings(warnings, drawingContext);
+
           
 
             // Draw the bones
