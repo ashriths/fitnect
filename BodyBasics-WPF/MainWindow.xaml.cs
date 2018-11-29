@@ -149,6 +149,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private List<Pen> bodyColors;
 
+        bool enable = false;
+
         /// <summary>
         /// Current status text to display
         /// </summary>
@@ -526,11 +528,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="handPosition">position of the hand</param>
         private void DrawHand(HandState handState, Point handPosition)
         {
-            //System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)Math.Round(handPosition.X), (int)Math.Round(handPosition.Y));
+            if(enable == true)
+            {
+                System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)Math.Round(handPosition.X * 3), (int)Math.Round(handPosition.Y*4));
+            }
+            
             switch (handState)
             {
                 case HandState.Closed:
-                    LeftClick();
+                    LeftClick_DOWN();
+                    break;
+                case HandState.Open:
+                    LeftClick_UP();
                     break;
             }
         }
@@ -546,12 +555,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private const int MOUSEEVENTF_MIDDLEUP = 0x0040;
         private const int MOUSEEVENTF_ABSOLUTE = 0x800;
 
-        public static void LeftClick()
+        public static void LeftClick_DOWN()
         {
             mouse_event(MOUSEEVENTF_LEFTDOWN, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
-            mouse_event(MOUSEEVENTF_LEFTUP, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
         }
 
+        public static void LeftClick_UP()
+        {
+            mouse_event(MOUSEEVENTF_LEFTUP, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
+        }
+        
         /// <summary>
         /// Draws indicators to show which edges are clipping body data
         /// </summary>
@@ -616,7 +629,19 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             this.Close();
         }
-
+        private void Button_Click_Enable(object sender, RoutedEventArgs e)
+        {
+            if(enable == false)
+            {
+                enable = true;
+                Enable.Content = "Disable hand tracking";
+            }
+            else
+            {
+                enable = false;
+                Enable.Content = "Enable hand tracking";
+            }
+        }
         private void Button_PoiterEntered(object sender, System.Windows.Input.MouseEventArgs e)
         {
             Btn_JumpingJacks.Content = "Jumping Jacks";
@@ -626,6 +651,5 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             Btn_JumpingJacks.Content = "";
         }
-
     }
 }

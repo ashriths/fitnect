@@ -5,97 +5,101 @@
         Height="677" Width="1066" 
         Loaded="MainWindow_Loaded"
         Closing="MainWindow_Closing" Visibility="Visible">
-    <Window.Resources>
-        <SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e" />
-        <SolidColorBrush x:Key="KinectPurpleBrush" Color="#ff52318f" />
-        <SolidColorBrush x:Key="KinectBlueBrush" Color="#ff00BCF2" />
-    </Window.Resources>
-    <Grid Margin="0" >
-        <Grid.Effect>
-            <DropShadowEffect/>
-        </Grid.Effect>
-        <Grid.Background>
-            <ImageBrush Stretch="Fill" ImageSource="Images\bg.jpg" AlignmentY="Top" AlignmentX="Center"/>
-        </Grid.Background>
-        <Button x:Name="Btn_JumpingJacks"  MouseEnter="Button_PoiterEntered" MouseLeave="Button_PointerExited" HorizontalAlignment="Left" Margin="125,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="24" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="White" Click="Button_Click_Jumping_Jacks">
-            <Button.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
-            </Button.Effect>
-            <Button.Background>
-                <ImageBrush ImageSource="Images/Jumping-Jacks.jpg" Opacity="0.9">
-                    <ImageBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5" CenterX="0.5"/>
-                            <SkewTransform CenterY="0.5" CenterX="0.5"/>
-                            <RotateTransform CenterY="0.5" CenterX="0.5"/>
-                            <TranslateTransform/>
-                        </TransformGroup>
-                    </ImageBrush.RelativeTransform>
-                </ImageBrush>
-            </Button.Background>
-        </Button>
-        <Button Content="Exit" HorizontalAlignment="Center" Margin="468,542,444,44" VerticalAlignment="Center" Width="146" Height="60"  FontSize="36" Click="Button_Click_Exit" FontFamily="Arial Rounded MT Bold">
-            <Button.Effect>
-                <DropShadowEffect/>
-            </Button.Effect>
-        </Button>
-        <TextBlock HorizontalAlignment="Left" Height="63" Margin="44,32,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="570" FontSize="48" Text="Choose workout type" FontFamily="Viner Hand ITC" FontWeight="Bold" SnapsToDevicePixels="True">
-            <TextBlock.Effect>
-                <DropShadowEffect/>
-            </TextBlock.Effect>
-            <TextBlock.Foreground>
-                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
-            </TextBlock.Foreground>
-        </TextBlock>
-        <Button Content="" HorizontalAlignment="Left" Margin="430,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}">
-            <Button.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
-            </Button.Effect>
-            <Button.Background>
-                <ImageBrush ImageSource="Images/yoga.jpg" Opacity="0.9">
-                    <ImageBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5" CenterX="0.5"/>
-                            <SkewTransform CenterY="0.5" CenterX="0.5"/>
-                            <RotateTransform CenterY="0.5" CenterX="0.5"/>
-                            <TranslateTransform/>
-                        </TransformGroup>
-                    </ImageBrush.RelativeTransform>
-                </ImageBrush>
-            </Button.Background>
-        </Button>
-        <Button Content="" HorizontalAlignment="Left" Margin="742,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}">
-            <Button.Effect>
-                <DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
-            </Button.Effect>
-            <Button.Background>
-                <ImageBrush ImageSource="Images/yoga-2.jpg" Opacity="0.9">
-                    <ImageBrush.RelativeTransform>
-                        <TransformGroup>
-                            <ScaleTransform CenterY="0.5" CenterX="0.5"/>
-                            <SkewTransform CenterY="0.5" CenterX="0.5"/>
-                            <RotateTransform CenterY="0.5" CenterX="0.5"/>
-                            <TranslateTransform/>
-                        </TransformGroup>
-                    </ImageBrush.RelativeTransform>
-                </ImageBrush>
-            </Button.Background>
-        </Button>
-        <TextBox HorizontalAlignment="Left" Height="36" Margin="125,338,0,0" TextWrapping="Wrap" Text="Jumping Jacks" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
-            <TextBox.Effect>
-                <DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
-            </TextBox.Effect>
-        </TextBox>
-        <TextBox HorizontalAlignment="Left" Height="36" Margin="430,338,0,0" TextWrapping="Wrap" Text="Yoga" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
-            <TextBox.Effect>
-                <DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
-            </TextBox.Effect>
-        </TextBox>
-        <TextBox HorizontalAlignment="Left" Height="36" Margin="742,338,0,0" TextWrapping="Wrap" Text="XXX" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
-            <TextBox.Effect>
-                <DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
-            </TextBox.Effect>
-        </TextBox>
-
-    </Grid>
+	<Window.Resources>
+		<SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e" />
+		<SolidColorBrush x:Key="KinectPurpleBrush" Color="#ff52318f" />
+		<SolidColorBrush x:Key="KinectBlueBrush" Color="#ff00BCF2" />
+	</Window.Resources>
+	<Grid Margin="0" >
+		<Grid.Effect>
+			<DropShadowEffect/>
+		</Grid.Effect>
+		<Grid.Background>
+			<ImageBrush Stretch="Fill" ImageSource="Images\bg.jpg" AlignmentY="Top" AlignmentX="Center"/>
+		</Grid.Background>
+		<Button x:Name="Btn_JumpingJacks"  MouseEnter="Button_PoiterEntered" MouseLeave="Button_PointerExited" HorizontalAlignment="Left" Margin="125,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="24" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="White" Click="Button_Click_Jumping_Jacks">
+			<Button.Effect>
+				<DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
+			</Button.Effect>
+			<Button.Background>
+				<ImageBrush ImageSource="Images/Jumping-Jacks.jpg" Opacity="0.9">
+					<ImageBrush.RelativeTransform>
+						<TransformGroup>
+							<ScaleTransform CenterY="0.5" CenterX="0.5"/>
+							<SkewTransform CenterY="0.5" CenterX="0.5"/>
+							<RotateTransform CenterY="0.5" CenterX="0.5"/>
+							<TranslateTransform/>
+						</TransformGroup>
+					</ImageBrush.RelativeTransform>
+				</ImageBrush>
+			</Button.Background>
+		</Button>
+		<Button Content="Exit" HorizontalAlignment="Center" Margin="468,542,444,44" VerticalAlignment="Center" Width="146" Height="60"  FontSize="36" Click="Button_Click_Exit" FontFamily="Arial Rounded MT Bold">
+			<Button.Effect>
+				<DropShadowEffect/>
+			</Button.Effect>
+		</Button>
+		<TextBlock HorizontalAlignment="Left" Height="63" Margin="44,32,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="570" FontSize="48" Text="Choose workout type" FontFamily="Viner Hand ITC" FontWeight="Bold" SnapsToDevicePixels="True">
+			<TextBlock.Effect>
+				<DropShadowEffect/>
+			</TextBlock.Effect>
+			<TextBlock.Foreground>
+				<SolidColorBrush Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
+			</TextBlock.Foreground>
+		</TextBlock>
+		<Button Content="" HorizontalAlignment="Left" Margin="430,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}">
+			<Button.Effect>
+				<DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
+			</Button.Effect>
+			<Button.Background>
+				<ImageBrush ImageSource="Images/yoga.jpg" Opacity="0.9">
+					<ImageBrush.RelativeTransform>
+						<TransformGroup>
+							<ScaleTransform CenterY="0.5" CenterX="0.5"/>
+							<SkewTransform CenterY="0.5" CenterX="0.5"/>
+							<RotateTransform CenterY="0.5" CenterX="0.5"/>
+							<TranslateTransform/>
+						</TransformGroup>
+					</ImageBrush.RelativeTransform>
+				</ImageBrush>
+			</Button.Background>
+		</Button>
+		<Button Content="" HorizontalAlignment="Left" Margin="742,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}">
+			<Button.Effect>
+				<DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
+			</Button.Effect>
+			<Button.Background>
+				<ImageBrush ImageSource="Images/yoga-2.jpg" Opacity="0.9">
+					<ImageBrush.RelativeTransform>
+						<TransformGroup>
+							<ScaleTransform CenterY="0.5" CenterX="0.5"/>
+							<SkewTransform CenterY="0.5" CenterX="0.5"/>
+							<RotateTransform CenterY="0.5" CenterX="0.5"/>
+							<TranslateTransform/>
+						</TransformGroup>
+					</ImageBrush.RelativeTransform>
+				</ImageBrush>
+			</Button.Background>
+		</Button>
+		<TextBox HorizontalAlignment="Left" Height="36" Margin="125,338,0,0" TextWrapping="Wrap" Text="Jumping Jacks" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
+			<TextBox.Effect>
+				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
+			</TextBox.Effect>
+		</TextBox>
+		<TextBox HorizontalAlignment="Left" Height="36" Margin="430,338,0,0" TextWrapping="Wrap" Text="Yoga" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
+			<TextBox.Effect>
+				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
+			</TextBox.Effect>
+		</TextBox>
+		<TextBox HorizontalAlignment="Left" Height="36" Margin="742,338,0,0" TextWrapping="Wrap" Text="XXX" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
+			<TextBox.Effect>
+				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
+			</TextBox.Effect>
+		</TextBox>
+		<Button Name="Enable" Content="Enable hand tracking" HorizontalAlignment="Center" Margin="327,445,305,141" VerticalAlignment="Center" Width="426" Height="60"  FontSize="36" Click="Button_Click_Enable" FontFamily="Arial Rounded MT Bold">
+			<Button.Effect>
+				<DropShadowEffect/>
+			</Button.Effect>
+		</Button>
+	</Grid>
 </Window>
