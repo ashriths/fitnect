@@ -540,6 +540,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     break;
                 case HandState.Open:
                     LeftClick_UP();
+                    break;
             }
         }
 
