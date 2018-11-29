@@ -144,6 +144,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         public static int exerciseState = 0;
         public static int reps = 0;
 
+        public static int restFramecount = 50;
+
         /// <summary>
         /// Initializes a new instance of the MoveScreen class.
         /// </summary>
@@ -384,6 +386,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                             {
                                 reps += 1;
                                 prevExerciseState = exerciseState;
+                                restFramecount = 0;
+                            }
+                            else {
+                                restFramecount += 1;
                             }
                         }
                     }
@@ -581,6 +587,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         12, System.Windows.Media.Brushes.White),
                         new System.Windows.Point(this.displayWidth - 100, 50)
                     );
+            if (restFramecount > 100) {
+                drawingContext.DrawText(
+                        new FormattedText("You are not exercising. Do you want to exit?",
+                        CultureInfo.GetCultureInfo("en-us"),
+                        FlowDirection.LeftToRight,
+                        new Typeface("Verdana"),
+                        12, System.Windows.Media.Brushes.White),
+                        new System.Windows.Point(0, this.displayHeight - 50)
+                    );
+            }
+            
+
 
             List<string> warnings = this.CheckForWrongPosture(interestedJointAngles, jointPoints, drawingContext);
             this.PrintWarnings(warnings, drawingContext);
