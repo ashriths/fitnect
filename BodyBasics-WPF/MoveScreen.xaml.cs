@@ -138,6 +138,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private string statusText = null;
 
+        private string exerciseType;
+
         const int TEXTWIDTH = 30;
 
         public static int prevExerciseState = 0;
@@ -149,7 +151,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <summary>
         /// Initializes a new instance of the MoveScreen class.
         /// </summary>
-        public MoveScreen()
+        public MoveScreen(string exerciseType)
         {
             // one sensor is currently supported
             this.kinectSensor = KinectSensor.GetDefault();
@@ -224,6 +226,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.NoSensorStatusText;
+
+            // set the exercise type
+            this.exerciseType = exerciseType;
 
             // Create the drawing group we'll use for drawing
             this.drawingGroup = new DrawingGroup();
@@ -447,9 +452,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 { "LeftShoulder", new List<JointType>{JointType.SpineShoulder, JointType.ShoulderLeft, JointType.ElbowRight}} ,
                 { "RightShoulder", new List<JointType>{JointType.SpineShoulder, JointType.ShoulderRight, JointType.ElbowLeft}},
                 { "LeftHip", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.SpineMid}},
-                { "RightHip", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.SpineMid}}
+                { "RightHip", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.SpineMid}},
+                { "RightUpperArm", new List<JointType>{JointType.ShoulderRight, JointType.SpineShoulder, JointType.ElbowRight}},
+                { "LeftUpperArm", new List<JointType> { JointType.ShoulderLeft, JointType.SpineShoulder, JointType.ElbowLeft }},
+                { "RightKnee", new List<JointType> { JointType.KneeRight, JointType.HipRight, JointType.AnkleRight }},
+                { "LeftKnee", new List<JointType> { JointType.KneeLeft, JointType.HipLeft, JointType.AnkleLeft }},
+                { "Back", new List<JointType> { JointType.SpineMid, JointType.SpineBase, JointType.SpineShoulder }},
+                { "Groin", new List<JointType> { JointType.SpineBase, JointType.KneeRight, JointType.KneeLeft }}
+         
+        };
 
-            };
             IDictionary<string, double> interestedJointAngles = new Dictionary<string, double>();
             foreach (KeyValuePair<string, List<JointType>> kv in interestedJoints) {
                 interestedJointAngles.Add(kv.Key, this.GetAngleBetweenJoints(kv.Value[0], kv.Value[1], kv.Value[2], joints));
@@ -494,22 +506,79 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext) {
             List<string> warnings = new List<string>();
-            if (interestedJointAngles.ContainsKey("RightArm"))
+            if (string.Equals(exerciseType, "Jumping Jacks"))
             {
-                if (interestedJointAngles["RightArm"] < 110.00) {
-                    warnings.Add("Right Arm is not straight.");
-                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ElbowRight], jointSize, jointSize);
-                    PrintJointWarnings("Keep Arm straight!", drawingContext, jointPoints[JointType.ElbowRight]);
-                }
-            }
-            if (interestedJointAngles.ContainsKey("LeftArm"))
-            {
-                if (interestedJointAngles["LeftArm"] < 110.00)
+                if (interestedJointAngles.ContainsKey("RightArm"))
                 {
-                    warnings.Add("Left Arm is not straight.");
-                    drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ElbowLeft], jointSize, jointSize);
-                    PrintJointWarnings("Keep Arm straight!", drawingContext, jointPoints[JointType.ElbowLeft]);
+                    if (interestedJointAngles["RightArm"] < 110.00)
+                    {
+                        warnings.Add("Right Arm is not straight");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ElbowRight], jointSize, jointSize);
+                        PrintJointWarnings("Keep Arm straight!", drawingContext, jointPoints[JointType.ElbowRight]);
+                    }
                 }
+                if (interestedJointAngles.ContainsKey("LeftArm"))
+                {
+                    if (interestedJointAngles["LeftArm"] < 110.00)
+                    {
+                        warnings.Add("Left Arm is not straight");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ElbowLeft], jointSize, jointSize);
+                        PrintJointWarnings("Keep Arm straight!", drawingContext, jointPoints[JointType.ElbowLeft]);
+                    }
+                }
+
+            }
+
+            else if (string.Equals(exerciseType, "Squat"))
+            {
+                if (interestedJointAngles.ContainsKey("RightUpperArm"))
+                {
+                    if (interestedJointAngles["RightUpperArm"] < 80.00)
+                    {
+                        warnings.Add("Right Arm is not stretched");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ShoulderLeft], jointSize, jointSize);
+                        PrintJointWarnings("Keep Arm stretched out in front!", drawingContext, jointPoints[JointType.ShoulderLeft]);
+                    }
+                }
+                if (interestedJointAngles.ContainsKey("LeftUpperArm"))
+                {
+                    if (interestedJointAngles["LeftUpperArm"] < 80.00)
+                    {
+                        warnings.Add("Left Arm is not stretched");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.ShoulderRight], jointSize, jointSize);
+                        PrintJointWarnings("Keep Arm stretched out in front!", drawingContext, jointPoints[JointType.ShoulderRight]);
+                    }
+                }
+
+                if (interestedJointAngles.ContainsKey("RightKnee"))
+                {
+                    if (interestedJointAngles["RightKnee"] < 75.00 || interestedJointAngles["RightKnee"] > 130.00)
+                    {
+                        warnings.Add("Right knee not at right angle");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.KneeRight], jointSize, jointSize);
+                        PrintJointWarnings("Keep knees bended at 90 degree!", drawingContext, jointPoints[JointType.KneeRight]);
+                    }
+                }
+                if (interestedJointAngles.ContainsKey("LeftKnee"))
+                {
+                    if (interestedJointAngles["LeftKnee"] < 75.00 || interestedJointAngles["LeftKnee"] > 130.00)
+                    {
+                        warnings.Add("Left knee not at right angle");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.KneeLeft], jointSize, jointSize);
+                        PrintJointWarnings("Keep knees bended at 90 degree!", drawingContext, jointPoints[JointType.KneeLeft]);
+                    }
+                }
+
+                if (interestedJointAngles.ContainsKey("Back"))
+                {
+                    if (interestedJointAngles["Back"] < 170.00)
+                    {
+                        warnings.Add("Back NoT Straight");
+                        drawingContext.DrawEllipse(this.jointWrongBrush, null, jointPoints[JointType.SpineMid], jointSize, jointSize);
+                        PrintJointWarnings("Keep back straight!", drawingContext, jointPoints[JointType.SpineMid]);
+                    }
+                }
+
             }
 
             /*if (interestedJointAngles.ContainsKey("RightShoulder"))
@@ -549,6 +618,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     PrintJointWarnings("Move Right Leg", drawingContext, jointPoints[JointType.KneeLeft]);
                 }
             }*/
+
             return warnings;
         }
 

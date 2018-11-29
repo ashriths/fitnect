@@ -388,7 +388,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 switch (e.Result.Semantics.Value.ToString())
                 {
                     case "JUMPINGJACKS":
-                        this.exerciseScreen = new MoveScreen();
+                        this.exerciseScreen = new MoveScreen("Jumping Jacks");
+                        this.exerciseScreen.Show();
+                        break;
+                    case "SQUAT":
+                        this.exerciseScreen = new MoveScreen("Squat");
                         this.exerciseScreen.Show();
                         break;
                     case "EXIT":
@@ -621,7 +625,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private void Button_Click_Jumping_Jacks(object sender, RoutedEventArgs e)
         {
-            MoveScreen OP = new MoveScreen();
+            MoveScreen OP = new MoveScreen("Jumping Jacks");
+            OP.Show();
+        }
+
+        private void Button_Click_Squat(object sender, RoutedEventArgs e)
+        {
+            MoveScreen OP = new MoveScreen("Squat");
             OP.Show();
         }
 
@@ -642,14 +652,23 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 Enable.Content = "Enable hand tracking";
             }
         }
-        private void Button_PoiterEntered(object sender, System.Windows.Input.MouseEventArgs e)
+        private void Button_PoiterEntered_Jump(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            Btn_JumpingJacks.Content = "Jumping Jacks";
+            Btn_JumpingJacks.Content = "Click to Start";
         }
 
-        private void Button_PointerExited(object sender, System.Windows.Input.MouseEventArgs e)
+        private void Button_PointerExited_Jump(object sender, System.Windows.Input.MouseEventArgs e)
         {
             Btn_JumpingJacks.Content = "";
+        }
+        private void Button_PoiterEntered_Squat(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Btn_Squat.Content = "Click to Start";
+        }
+
+        private void Button_PointerExited_Squat(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Btn_Squat.Content = "";
         }
     }
 }
