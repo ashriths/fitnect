@@ -1,0 +1,37 @@
+﻿<grammar version="1.0" xml:lang="en-US" root="rootRule" tag-format="semantics/1.0-literals" xmlns="http://www.w3.org/2001/06/grammar">
+  <rule id="rootRule">
+    <one-of>
+      <item>
+        <tag>JUMPINGJACKS</tag>
+        <one-of>
+          <item> jumping </item>
+          <item> jack </item>
+          <item> jumping jacks </item>
+          <item> jumping jack </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>BACKWARD</tag>
+        <one-of>
+          <item> backward </item>
+          <item> backwards </item>
+          <item> back </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>LEFT</tag>
+        <one-of>
+          <item> turn left </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>EXIT</tag>
+        <one-of>
+          <item> stop </item>
+          <item> exit </item>
+          <item> exits </item>
+        </one-of>
+      </item>
+    </one-of>
+  </rule>
+</grammar>
