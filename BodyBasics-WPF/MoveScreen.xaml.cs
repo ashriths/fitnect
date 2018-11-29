@@ -478,7 +478,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             int yStart = displayHeight - 120 - TEXTWIDTH;
             Rect rect = new Rect(new System.Windows.Point(0, 300), new System.Windows.Size(150, 150));
-            drawingContext.DrawRectangle(System.Windows.Media.Brushes.OrangeRed, (System.Windows.Media.Pen)null, rect);
+            //drawingContext.DrawRectangle(System.Windows.Media.Brushes.OrangeRed, (System.Windows.Media.Pen)null, rect);
             foreach (string warn in warnings) {
                 drawingContext.DrawText(
                         new FormattedText(warn,
@@ -605,7 +605,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         FlowDirection.LeftToRight,
                         new Typeface("Verdana"),
                         12, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(0, this.displayHeight - 50)
+                        new System.Windows.Point(150, this.displayHeight - 50)
                     );
             }
             

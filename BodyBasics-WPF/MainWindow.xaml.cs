@@ -156,6 +156,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         const int TEXTWIDTH = 30;
 
+        private MoveScreen exerciseScreen = null;
+
         /// <summary>
         /// Gets the metadata for the speech recognizer (acoustic model) most suitable to
         /// process audio from Kinect device.
@@ -384,10 +386,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 switch (e.Result.Semantics.Value.ToString())
                 {
                     case "JUMPINGJACKS":
-                        MoveScreen OP = new MoveScreen();
-                        OP.Show();
+                        this.exerciseScreen = new MoveScreen();
+                        this.exerciseScreen.Show();
                         break;
                     case "EXIT":
+                        try {
+                            this.exerciseScreen.Close();
+                        } catch {
+                            
+                        }
                         this.Close();
                         break;
 

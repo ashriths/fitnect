@@ -27,7 +27,6 @@
       <item>
         <tag>EXIT</tag>
         <one-of>
-          <item> stop </item>
           <item> exit </item>
           <item> exits </item>
         </one-of>
