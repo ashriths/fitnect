@@ -17,7 +17,7 @@
         <Grid.Background>
             <ImageBrush Stretch="Fill" ImageSource="Images\bg.jpg" AlignmentY="Top" AlignmentX="Center"/>
         </Grid.Background>
-        <Button Content="" HorizontalAlignment="Left" Margin="125,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="20" Click="Button_Click_Others" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="White">
+        <Button x:Name="Btn_JumpingJacks"  MouseEnter="Button_PoiterEntered" MouseLeave="Button_PointerExited" HorizontalAlignment="Left" Margin="125,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="24" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="White" Click="Button_Click_Jumping_Jacks">
             <Button.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
             </Button.Effect>
@@ -47,7 +47,7 @@
                 <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}"/>
             </TextBlock.Foreground>
         </TextBlock>
-        <Button Content="" HorizontalAlignment="Left" Margin="430,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" Click="Button_Click_Others" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}">
+        <Button Content="" HorizontalAlignment="Left" Margin="430,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}">
             <Button.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
             </Button.Effect>
@@ -64,7 +64,7 @@
                 </ImageBrush>
             </Button.Background>
         </Button>
-        <Button Content="" HorizontalAlignment="Left" Margin="742,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" Click="Button_Click_Others" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}">
+        <Button Content="" HorizontalAlignment="Left" Margin="742,133,0,0" VerticalAlignment="Top" Width="200" Height="200" FontSize="36" FontFamily="Berlin Sans FB" BorderBrush="#FF4F4F4F" Foreground="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}">
             <Button.Effect>
                 <DropShadowEffect BlurRadius="10" ShadowDepth="10"/>
             </Button.Effect>
@@ -86,7 +86,7 @@
                 <DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
             </TextBox.Effect>
         </TextBox>
-        <TextBox HorizontalAlignment="Left" Height="36" Margin="430,338,0,0" TextWrapping="Wrap" Text="Yoga" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextChanged="TextBox_TextChanged" TextAlignment="Center">
+        <TextBox HorizontalAlignment="Left" Height="36" Margin="430,338,0,0" TextWrapping="Wrap" Text="Yoga" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
             <TextBox.Effect>
                 <DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
             </TextBox.Effect>
