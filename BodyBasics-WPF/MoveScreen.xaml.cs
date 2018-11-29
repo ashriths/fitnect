@@ -476,7 +476,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         public void PrintWarnings(List<String> warnings, DrawingContext drawingContext)
         {
-            int yStart = displayHeight - 100 - TEXTWIDTH;
+            int yStart = displayHeight - 120 - TEXTWIDTH;
+            Rect rect = new Rect(new System.Windows.Point(0, 300), new System.Windows.Size(150, 150));
+            drawingContext.DrawRectangle(System.Windows.Media.Brushes.OrangeRed, (System.Windows.Media.Pen)null, rect);
             foreach (string warn in warnings) {
                 drawingContext.DrawText(
                         new FormattedText(warn,
@@ -486,7 +488,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         10, System.Windows.Media.Brushes.White),
                         new System.Windows.Point(0, yStart + TEXTWIDTH)
                     );
-                yStart -= TEXTWIDTH;
+                yStart += TEXTWIDTH;
             }
         }
 
@@ -578,14 +580,23 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     start += TEXTWIDTH;
                 }
             }
-
+            Rect rect2 = new Rect(new System.Windows.Point(370, 30), new System.Windows.Size(120, 60));
+            drawingContext.DrawRectangle(System.Windows.Media.Brushes.White, (System.Windows.Media.Pen)null, rect2);
             drawingContext.DrawText(
-                        new FormattedText("Reps:".PadLeft(10, ' ') + "    " + (int)reps/4,
+                        new FormattedText("Reps:",
                         CultureInfo.GetCultureInfo("en-us"),
                         FlowDirection.LeftToRight,
                         new Typeface("Verdana"),
-                        12, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(this.displayWidth - 100, 50)
+                        18, System.Windows.Media.Brushes.Black),
+                        new System.Windows.Point(this.displayWidth - 120, 30)
+                    );
+            drawingContext.DrawText(
+                        new FormattedText(" " + (int)reps/4,
+                        CultureInfo.GetCultureInfo("en-us"),
+                        FlowDirection.LeftToRight,
+                        new Typeface("Verdana"),
+                        24, System.Windows.Media.Brushes.Black),
+                        new System.Windows.Point(this.displayWidth - 130, 60)
                     );
             if (restFramecount > 100) {
                 drawingContext.DrawText(
