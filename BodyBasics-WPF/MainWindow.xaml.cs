@@ -429,20 +429,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
 
-        private void Button_Click_Start(object sender, RoutedEventArgs e)
+        private void Button_Click_Jumping_Jacks(object sender, RoutedEventArgs e)
         {
             MoveScreen OP = new MoveScreen();
             OP.Show();
-        }
-
-        private void Button_Click_Record(object sender, RoutedEventArgs e)
-        {
-
         }
 
         private void Button_Click_Exit(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
+
     }
 }
