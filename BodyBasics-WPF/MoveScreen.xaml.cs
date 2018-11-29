@@ -485,8 +485,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         CultureInfo.GetCultureInfo("en-us"),
                         FlowDirection.LeftToRight,
                         new Typeface("Verdana"),
-                        10, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(0, yStart + TEXTWIDTH)
+                        10, System.Windows.Media.Brushes.OrangeRed),
+                        new System.Windows.Point(10, yStart + TEXTWIDTH)
                     );
                 yStart += TEXTWIDTH;
             }
@@ -512,7 +512,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 }
             }
 
-            if (interestedJointAngles.ContainsKey("RightShoulder"))
+            /*if (interestedJointAngles.ContainsKey("RightShoulder"))
             {
                 if (interestedJointAngles["RightShoulder"] < 110.00)
                 {
@@ -574,10 +574,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         CultureInfo.GetCultureInfo("en-us"),
                         FlowDirection.LeftToRight,
                         new Typeface("Verdana"),
-                        12, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(0, start + TEXTWIDTH)
+                        6, System.Windows.Media.Brushes.White),
+                        new System.Windows.Point(0, start + 6)
                     );
-                    start += TEXTWIDTH;
+                    start += 6;
                 }
             }
             Rect rect2 = new Rect(new System.Windows.Point(370, 30), new System.Windows.Size(120, 60));
