@@ -540,7 +540,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     break;
                 case HandState.Open:
                     LeftClick_UP();
-                    break;
             }
         }
 
@@ -564,6 +563,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             mouse_event(MOUSEEVENTF_LEFTUP, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
         }
+        
         /// <summary>
         /// Draws indicators to show which edges are clipping body data
         /// </summary>
@@ -628,7 +628,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             this.Close();
         }
-
         private void Button_Click_Enable(object sender, RoutedEventArgs e)
         {
             if(enable == false)
@@ -642,7 +641,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 Enable.Content = "Enable hand tracking";
             }
         }
-
         private void Button_PoiterEntered(object sender, System.Windows.Input.MouseEventArgs e)
         {
             Btn_JumpingJacks.Content = "Jumping Jacks";

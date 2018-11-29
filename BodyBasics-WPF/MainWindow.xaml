@@ -5,12 +5,10 @@
         Height="677" Width="1066" 
         Loaded="MainWindow_Loaded"
         Closing="MainWindow_Closing" Visibility="Visible">
-	
 	<Window.Resources>
 		<SolidColorBrush x:Key="MediumGreyBrush" Color="#ff6e6e6e" />
 		<SolidColorBrush x:Key="KinectPurpleBrush" Color="#ff52318f" />
 		<SolidColorBrush x:Key="KinectBlueBrush" Color="#ff00BCF2" />
-
 	</Window.Resources>
 	<Grid Margin="0" >
 		<Grid.Effect>
@@ -103,6 +101,5 @@
 				<DropShadowEffect/>
 			</Button.Effect>
 		</Button>
-
 	</Grid>
 </Window>
