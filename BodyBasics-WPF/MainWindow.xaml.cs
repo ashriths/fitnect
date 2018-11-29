@@ -17,6 +17,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Windows.Media.Imaging;
     using System.Windows.Media.Media3D;
     using Microsoft.Kinect;
+    using System.Windows.Forms;
+    using System.Runtime.InteropServices;
+
+    using Microsoft.Speech.AudioFormat;
+    using Microsoft.Speech.Recognition;
+    using System.Text;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -26,7 +32,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <summary>
         /// Radius of drawn hand circles
         /// </summary>
-        private const double HandSize = 30;
+        private const double HandSize = 10;
+
+        /// <summary>
+        /// Radius of drawn joint circles
+        /// </summary>
+        private const double jointSize = 20;
 
         /// <summary>
         /// Thickness of drawn joint lines
@@ -42,6 +53,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Constant for clamping Z values of camera space points from being negative
         /// </summary>
         private const float InferredZPositionClamp = 0.1f;
+
+        /// <summary>
+        /// Brush used for drawing joints that are moving at wrong angle
+        /// </summary>
+        private readonly Brush jointWrongBrush = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
 
         /// <summary>
         /// Brush used for drawing hands that are currently tracked as closed
@@ -89,6 +105,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private KinectSensor kinectSensor = null;
 
         /// <summary>
+        /// Stream for 32b-16b conversion.
+        /// </summary>
+        private KinectAudioStream convertStream = null;
+
+        /// <summary>
+        /// Speech recognition engine using audio data from Kinect.
+        /// </summary>
+        private SpeechRecognitionEngine speechEngine = null;
+
+        /// <summary>
         /// Coordinate mapper to map one type of point to another
         /// </summary>
         private CoordinateMapper coordinateMapper = null;
@@ -123,12 +149,52 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         private List<Pen> bodyColors;
 
+        bool enable = false;
+
         /// <summary>
         /// Current status text to display
         /// </summary>
         private string statusText = null;
 
         const int TEXTWIDTH = 30;
+
+        private MoveScreen exerciseScreen = null;
+
+        /// <summary>
+        /// Gets the metadata for the speech recognizer (acoustic model) most suitable to
+        /// process audio from Kinect device.
+        /// </summary>
+        /// <returns>
+        /// RecognizerInfo if found, <code>null</code> otherwise.
+        /// </returns>
+        private static RecognizerInfo TryGetKinectRecognizer()
+        {
+            IEnumerable<RecognizerInfo> recognizers;
+
+            // This is required to catch the case when an expected recognizer is not installed.
+            // By default - the x86 Speech Runtime is always expected. 
+            try
+            {
+                recognizers = SpeechRecognitionEngine.InstalledRecognizers();
+            }
+            catch (COMException)
+            {
+                return null;
+            }
+
+            foreach (RecognizerInfo recognizer in recognizers)
+            {
+                string value;
+                recognizer.AdditionalInfo.TryGetValue("Kinect", out value);
+                if ("True".Equals(value, StringComparison.OrdinalIgnoreCase) && "en-US".Equals(recognizer.Culture.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return recognizer;
+                }
+            }
+
+            return null;
+        }
+
 
         /// <summary>
         /// Initializes a new instance of the MainWindow class.
@@ -137,6 +203,81 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             // one sensor is currently supported
             this.kinectSensor = KinectSensor.GetDefault();
+
+            if (this.kinectSensor != null)
+            {
+                // open the sensor
+                this.kinectSensor.Open();
+
+                // grab the audio stream
+                IReadOnlyList<AudioBeam> audioBeamList = this.kinectSensor.AudioSource.AudioBeams;
+                System.IO.Stream audioStream = audioBeamList[0].OpenInputStream();
+
+                // create the convert stream
+                this.convertStream = new KinectAudioStream(audioStream);
+            }
+            else
+            {
+                // on failure, set the status text
+                //this.statusBarText.Text = Properties.Resources.NoKinectReady;
+                return;
+            }
+
+            RecognizerInfo ri = TryGetKinectRecognizer();
+
+            if (null != ri)
+            {
+
+                this.speechEngine = new SpeechRecognitionEngine(ri.Id);
+
+                /****************************************************************
+                * 
+                * Use this code to create grammar programmatically rather than from
+                * a grammar file.
+                * 
+                * var directions = new Choices();
+                * directions.Add(new SemanticResultValue("forward", "FORWARD"));
+                * directions.Add(new SemanticResultValue("forwards", "FORWARD"));
+                * directions.Add(new SemanticResultValue("straight", "FORWARD"));
+                * directions.Add(new SemanticResultValue("backward", "BACKWARD"));
+                * directions.Add(new SemanticResultValue("backwards", "BACKWARD"));
+                * directions.Add(new SemanticResultValue("back", "BACKWARD"));
+                * directions.Add(new SemanticResultValue("turn left", "LEFT"));
+                * directions.Add(new SemanticResultValue("turn right", "RIGHT"));
+                *
+                * var gb = new GrammarBuilder { Culture = ri.Culture };
+                * gb.Append(directions);
+                *
+                * var g = new Grammar(gb);
+                * 
+                ****************************************************************/
+
+                // Create a grammar from grammar definition XML file.
+                using (var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(Properties.Resources.SpeechGrammar)))
+                {
+                    var g = new Grammar(memoryStream);
+                    this.speechEngine.LoadGrammar(g);
+                }
+
+                this.speechEngine.SpeechRecognized += this.SpeechRecognized;
+                this.speechEngine.SpeechRecognitionRejected += this.SpeechRejected;
+
+                // let the convertStream know speech is going active
+                this.convertStream.SpeechActive = true;
+
+                // For long recognition sessions (a few hours or more), it may be beneficial to turn off adaptation of the acoustic model. 
+                // This will prevent recognition accuracy from degrading over time.
+                ////speechEngine.UpdateRecognizerSetting("AdaptationOn", 0);
+
+                this.speechEngine.SetInputToAudioStream(
+                    this.convertStream, new SpeechAudioFormatInfo(EncodingFormat.Pcm, 16000, 16, 1, 32000, 2, null));
+                this.speechEngine.RecognizeAsync(RecognizeMode.Multiple);
+            }
+            else
+            {
+                statusText = "No Speech Recogniser";
+            }
+
 
             // get the coordinate mapper
             this.coordinateMapper = this.kinectSensor.CoordinateMapper;
@@ -151,44 +292,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
 
-            // a bone defined as a line between two joints
-            this.bones = new List<Tuple<JointType, JointType>>();
-
-            // Torso
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.Head, JointType.Neck));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.Neck, JointType.SpineShoulder));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.SpineMid));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineMid, JointType.SpineBase));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipLeft));
-
-            // Right Arm
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.ElbowRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowRight, JointType.WristRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.HandRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.HandRight, JointType.HandTipRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.ThumbRight));
-
-            // Left Arm
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderLeft, JointType.ElbowLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowLeft, JointType.WristLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.HandLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.HandLeft, JointType.HandTipLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.ThumbLeft));
-
-            // Right Leg
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.HipRight, JointType.KneeRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeRight, JointType.AnkleRight));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleRight, JointType.FootRight));
-
-            // Left Leg
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
-            this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
-
-            
             // populate body colors, one for each BodyIndex
             this.bodyColors = new List<Pen>();
 
@@ -264,6 +367,55 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         }
 
         /// <summary>
+        /// Handler for recognized speech events.
+        /// </summary>
+        /// <param name="sender">object sending the event.</param>
+        /// <param name="e">event arguments.</param>
+        private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
+        {
+            // Speech utterance confidence below which we treat speech as if it hadn't been heard
+            const double ConfidenceThreshold = 0.3;
+
+            // Number of degrees in a right angle.
+            const int DegreesInRightAngle = 90;
+
+            // Number of pixels turtle should move forwards or backwards each time.
+            const int DisplacementAmount = 60;
+            
+
+            if (e.Result.Confidence >= ConfidenceThreshold)
+            {
+                switch (e.Result.Semantics.Value.ToString())
+                {
+                    case "JUMPINGJACKS":
+                        this.exerciseScreen = new MoveScreen();
+                        this.exerciseScreen.Show();
+                        break;
+                    case "EXIT":
+                        try {
+                            this.exerciseScreen.Close();
+                        } catch {
+                            
+                        }
+                        this.Close();
+                        break;
+
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handler for rejected speech events.
+        /// </summary>
+        /// <param name="sender">object sending the event.</param>
+        /// <param name="e">event arguments.</param>
+        private void SpeechRejected(object sender, SpeechRecognitionRejectedEventArgs e)
+        {
+            return;
+        }
+
+        /// <summary>
         /// Execute start up tasks
         /// </summary>
         /// <param name="sender">object sending the event</param>
@@ -328,7 +480,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 using (DrawingContext dc = this.drawingGroup.Open())
                 {
                     // Draw a transparent background to set the render size
-                    dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
 
                     int penIndex = 0;
                     foreach (Body body in this.bodies)
@@ -343,9 +494,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                             // convert the joint points to depth (display) space
                             Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-                            List<JointType> interestedJoints = new List<JointType>();
-                            interestedJoints.Add(JointType.ElbowLeft);
-                            interestedJoints.Add(JointType.ElbowRight);
                             foreach (JointType jointType in joints.Keys)
                             {
                                 // sometimes the depth(Z) of an inferred joint may show as negative
@@ -361,10 +509,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                             }
 
-                            this.DrawBody(joints, jointPoints, dc, drawPen);
+                            this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
 
-                            this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
-                            this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+
+
                         }
                     }
 
@@ -373,207 +521,49 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 }
             }
         }
-
-        public double AngleBetweenTwoVectors(Vector3D vectorA, Vector3D vectorB)
-        {
-            double dotProduct;
-            vectorA.Normalize();
-            vectorB.Normalize();
-            dotProduct = Vector3D.DotProduct(vectorA, vectorB);
-
-            return (double)Math.Acos(dotProduct) / Math.PI * 180;
-        }
-
-        private double GetAngleBetweenJoints(JointType a, JointType b, JointType c, IReadOnlyDictionary<JointType, Joint> joints)
-        {
-            if (joints.ContainsKey(a) && joints.ContainsKey(b) && joints.ContainsKey(c))
-            {
-                Vector3D boneA = new Vector3D(joints[a].Position.X, joints[a].Position.Y, joints[a].Position.Z);
-                Vector3D boneB = new Vector3D(joints[b].Position.X, joints[b].Position.Y, joints[b].Position.Z);
-                Vector3D boneC = new Vector3D(joints[c].Position.X, joints[c].Position.Y, joints[c].Position.Z);
-                return this.AngleBetweenTwoVectors(boneA - boneB, boneA - boneC);
-            }
-            return 0.0;
-        }
-
-        private IDictionary<string, double> GetInterstedJointAngles(IReadOnlyDictionary<JointType, Joint> joints)
-        {
-            IDictionary<string, List<JointType>> interestedJoints = new Dictionary<string, List<JointType>>{
-                { "RightArm", new List<JointType>{JointType.ElbowRight, JointType.WristRight, JointType.ShoulderRight}},
-                { "LeftArm", new List<JointType>{JointType.ElbowLeft, JointType.WristLeft, JointType.ShoulderLeft}} ,
-                { "RightLeg", new List<JointType>{JointType.SpineBase, JointType.HipRight, JointType.KneeRight}} ,
-                { "LeftLeg", new List<JointType>{JointType.SpineBase, JointType.HipLeft, JointType.KneeLeft}} 
-            };
-            IDictionary<string, double> interestedJointAngles = new Dictionary<string, double>();
-            foreach (KeyValuePair<string, List<JointType>> kv in interestedJoints) {
-                interestedJointAngles.Add(kv.Key, this.GetAngleBetweenJoints(kv.Value[0], kv.Value[1], kv.Value[2], joints));
-            }
-            return interestedJointAngles;
-        }
-
-        public void PrintWarnings(List<String> warnings, DrawingContext drawingContext)
-        {
-            int yStart = displayHeight - 100 - TEXTWIDTH;
-            foreach (string warn in warnings) {
-                drawingContext.DrawText(
-                        new FormattedText(warn,
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Verdana"),
-                        10, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(0, yStart + TEXTWIDTH)
-                    );
-                yStart -= TEXTWIDTH;
-            }
-        }
-
-        public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles) {
-            List<string> warnings = new List<string>();
-            if (interestedJointAngles.ContainsKey("RightArm"))
-            {
-                if (interestedJointAngles["RightArm"] < 110.00) {
-                    warnings.Add("Right Arm is not straight.");
-                } 
-            }
-            if (interestedJointAngles.ContainsKey("LeftArm"))
-            {
-                if (interestedJointAngles["LeftArm"] < 110.00)
-                {
-                    warnings.Add("Left Arm is not straight.");
-                }
-            }
-            /*if (interestedJointAngles.ContainsKey("RightLeg"))
-            {
-                if (interestedJointAngles["RightLeg"] > 50.00)
-                {
-                    warnings.Add("You are not moving your Right Leg");
-                }
-            }
-            if (interestedJointAngles.ContainsKey("LeftLeg"))
-            {
-                if (interestedJointAngles["LeftLeg"] > 50.00)
-                {
-                    warnings.Add("You are not moving your Left Leg");
-                }
-            }*/
-            return warnings;
-        }
-
-        /// <summary>
-        /// Draws a body
-        /// </summary>
-        /// <param name="joints">joints to draw</param>
-        /// <param name="jointPoints">translated positions of joints to draw</param>
-        /// <param name="drawingContext">drawing context to draw to</param>
-        /// <param name="drawingPen">specifies color to draw a specific body</param>
-        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
-        {
-
-            IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
-            int start = -TEXTWIDTH;
-            foreach (KeyValuePair<string, double> kv in interestedJointAngles)
-            {
-                if (kv.Value > 0.0)
-                {
-                    drawingContext.DrawText(
-                        new FormattedText(  kv.Key.PadLeft(10, ' ') + "    " +kv.Value.ToString(),
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Verdana"),
-                        12, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(0, start + TEXTWIDTH)
-                    );
-                    start += TEXTWIDTH;
-                }
-            }
-
-            List<string> warnings = this.CheckForWrongPosture(interestedJointAngles);
-            this.PrintWarnings(warnings, drawingContext);
-          
-
-            // Draw the bones
-            foreach (var bone in this.bones)
-            {
-                this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
-            }
-
-            // Draw the joints
-            foreach (JointType jointType in joints.Keys)
-            {
-                Brush drawBrush = null;
-
-                TrackingState trackingState = joints[jointType].TrackingState;
-
-                if (trackingState == TrackingState.Tracked)
-                {
-                    drawBrush = this.trackedJointBrush;
-                }
-                else if (trackingState == TrackingState.Inferred)
-                {
-                    drawBrush = this.inferredJointBrush;
-                }
-
-                if (drawBrush != null)
-                {
-                    drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Draws one bone of a body (joint to joint)
-        /// </summary>
-        /// <param name="joints">joints to draw</param>
-        /// <param name="jointPoints">translated positions of joints to draw</param>
-        /// <param name="jointType0">first joint of bone to draw</param>
-        /// <param name="jointType1">second joint of bone to draw</param>
-        /// <param name="drawingContext">drawing context to draw to</param>
-        /// /// <param name="drawingPen">specifies color to draw a specific bone</param>
-        private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
-        {
-            Joint joint0 = joints[jointType0];
-            Joint joint1 = joints[jointType1];
-
-            // If we can't find either of these joints, exit
-            if (joint0.TrackingState == TrackingState.NotTracked ||
-                joint1.TrackingState == TrackingState.NotTracked)
-            {
-                return;
-            }
-
-            // We assume all drawn bones are inferred unless BOTH joints are tracked
-            Pen drawPen = this.inferredBonePen;
-            if ((joint0.TrackingState == TrackingState.Tracked) && (joint1.TrackingState == TrackingState.Tracked))
-            {
-                drawPen = drawingPen;
-            }
-            drawingContext.DrawLine(drawPen, jointPoints[jointType0], jointPoints[jointType1]);
-        }
-
         /// <summary>
         /// Draws a hand symbol if the hand is tracked: red circle = closed, green circle = opened; blue circle = lasso
         /// </summary>
         /// <param name="handState">state of the hand</param>
         /// <param name="handPosition">position of the hand</param>
-        /// <param name="drawingContext">drawing context to draw to</param>
-        private void DrawHand(HandState handState, Point handPosition, DrawingContext drawingContext)
+        private void DrawHand(HandState handState, Point handPosition)
         {
+            if(enable == true)
+            {
+                System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)Math.Round(handPosition.X * 3), (int)Math.Round(handPosition.Y*4));
+            }
+            
             switch (handState)
             {
                 case HandState.Closed:
-                    drawingContext.DrawEllipse(this.handClosedBrush, null, handPosition, HandSize, HandSize);
+                    LeftClick_DOWN();
                     break;
-
                 case HandState.Open:
-                    drawingContext.DrawEllipse(this.handOpenBrush, null, handPosition, HandSize, HandSize);
-                    break;
-
-                case HandState.Lasso:
-                    drawingContext.DrawEllipse(this.handLassoBrush, null, handPosition, HandSize, HandSize);
+                    LeftClick_UP();
                     break;
             }
         }
 
+        [DllImport("user32.dll")]
+        static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
+        private const int MOUSEEVENTF_MOVE = 0x0001;
+        private const int MOUSEEVENTF_LEFTDOWN = 0x0002;
+        private const int MOUSEEVENTF_LEFTUP = 0x0004;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        private const int MOUSEEVENTF_RIGHTUP = 0x0010;
+        private const int MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+        private const int MOUSEEVENTF_MIDDLEUP = 0x0040;
+        private const int MOUSEEVENTF_ABSOLUTE = 0x800;
+
+        public static void LeftClick_DOWN()
+        {
+            mouse_event(MOUSEEVENTF_LEFTDOWN, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
+        }
+
+        public static void LeftClick_UP()
+        {
+            mouse_event(MOUSEEVENTF_LEFTUP, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
+        }
         /// <summary>
         /// Draws indicators to show which edges are clipping body data
         /// </summary>
@@ -626,6 +616,41 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // on failure, set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
+        }
+
+        private void Button_Click_Jumping_Jacks(object sender, RoutedEventArgs e)
+        {
+            MoveScreen OP = new MoveScreen();
+            OP.Show();
+        }
+
+        private void Button_Click_Exit(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Button_Click_Enable(object sender, RoutedEventArgs e)
+        {
+            if(enable == false)
+            {
+                enable = true;
+                Enable.Content = "Disable hand tracking";
+            }
+            else
+            {
+                enable = false;
+                Enable.Content = "Enable hand tracking";
+            }
+        }
+
+        private void Button_PoiterEntered(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Btn_JumpingJacks.Content = "Jumping Jacks";
+        }
+
+        private void Button_PointerExited(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Btn_JumpingJacks.Content = "";
         }
     }
 }
