@@ -535,16 +535,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             if(enable == true)
             {
                 System.Windows.Forms.Cursor.Position = new System.Drawing.Point((int)Math.Round(handPosition.X * 3), (int)Math.Round(handPosition.Y*4));
-            }
-            
-            switch (handState)
-            {
-                case HandState.Closed:
-                    LeftClick_DOWN();
-                    break;
-                case HandState.Open:
-                    LeftClick_UP();
-                    break;
+                switch (handState)
+                {
+                    case HandState.Closed:
+                        LeftClick_DOWN();
+                        break;
+                    case HandState.Open:
+                        LeftClick_UP();
+                        break;
+                }
             }
         }
 
