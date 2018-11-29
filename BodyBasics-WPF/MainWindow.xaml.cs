@@ -440,5 +440,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.Close();
         }
 
+        private void Button_PoiterEntered(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Btn_JumpingJacks.Content = "Jumping Jacks";
+        }
+
+        private void Button_PointerExited(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            Btn_JumpingJacks.Content = "";
+        }
+
     }
 }
