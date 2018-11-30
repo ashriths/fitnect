@@ -529,6 +529,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             }
 
+
+            //Angle checks for Squat, still need to work on arm angles
             else if (string.Equals(exerciseType, "Squat"))
             {
                 if (interestedJointAngles.ContainsKey("RightUpperArm"))

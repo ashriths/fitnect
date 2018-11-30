@@ -86,7 +86,7 @@
 				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
 			</TextBox.Effect>
 		</TextBox>
-		<TextBox HorizontalAlignment="Left" Height="36" Margin="430,338,0,0" TextWrapping="Wrap" Text="Squat" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
+		<TextBox HorizontalAlignment="Left" Height="36" Margin="430,338,0,0" TextWrapping="Wrap" Text="Static Squat" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
 			<TextBox.Effect>
 				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
 			</TextBox.Effect>
