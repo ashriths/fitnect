@@ -91,7 +91,7 @@
 				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
 			</TextBox.Effect>
 		</TextBox>
-		<TextBox HorizontalAlignment="Left" Height="36" Margin="742,338,0,0" TextWrapping="Wrap" Text="XXX" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
+        <TextBox HorizontalAlignment="Left" Height="36" Margin="742,338,0,0" TextWrapping="Wrap" Text="Import New" VerticalAlignment="Top" Width="200" FontFamily="Berlin Sans FB" FontSize="24" Opacity="0.7" TextAlignment="Center">
 			<TextBox.Effect>
 				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
 			</TextBox.Effect>
