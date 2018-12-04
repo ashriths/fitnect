@@ -11,11 +11,11 @@
         </one-of>
       </item>
       <item>
-        <tag>BACKWARD</tag>
+        <tag>SQUAT</tag>
         <one-of>
-          <item> backward </item>
-          <item> backwards </item>
-          <item> back </item>
+          <item> static squats </item>
+          <item> squat </item>
+          <item> squats </item>
         </one-of>
       </item>
       <item>

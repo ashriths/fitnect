@@ -231,10 +231,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.bodyColors.Add(new Pen(Brushes.Violet, 6));
 
             // set IsAvailableChanged event notifier
-            this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
+            //this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
 
             // open the sensor
-            this.kinectSensor.Open();
+            //this.kinectSensor.Open();
 
             // set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
@@ -324,11 +324,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.bodyFrameReader = null;
             }
 
-            if (this.kinectSensor != null)
-            {
-                this.kinectSensor.Close();
-                this.kinectSensor = null;
-            }
+            //if (this.kinectSensor != null)
+            //{
+            //    this.kinectSensor.Close();
+            //    this.kinectSensor = null;
+            //}
         }
 
         /// <summary>
