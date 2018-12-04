@@ -807,7 +807,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     }
 
                     //start counting down for 30 sec
-                    //else if(elapsedTime.Seconds >= 10 && elapsedTime.Seconds <= 40)
                     else
                     {
                         if (remainTime >= 0)
