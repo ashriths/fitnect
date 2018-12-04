@@ -814,7 +814,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                             //increment remaining time if not in position
                             if (!inPosition)
                             {
-                                totalSquatTime += 0.05;
+                                totalSquatTime += 0.035;
                             }
 
                             remainTime = Math.Round(remainTime, 1);
