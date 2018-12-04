@@ -12,6 +12,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
+    using System.Threading;
     using System.Windows;
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
@@ -148,6 +149,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         public static int restFramecount = 50;
 
+        // stop watch for static squat countdown
+        private DateTime startTime;
+        private TimeSpan elapsedTime;
+
+        // track if watch already started
+        private Boolean watchStarted;
+        
         /// <summary>
         /// Initializes a new instance of the MoveScreen class.
         /// </summary>
@@ -529,6 +537,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             }
 
+
+            //Angle checks for Squat, still need to work on arm angles
             else if (string.Equals(exerciseType, "Squat"))
             {
                 if (interestedJointAngles.ContainsKey("RightUpperArm"))
@@ -650,35 +660,161 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     start += 6;
                 }
             }
-            Rect rect2 = new Rect(new System.Windows.Point(370, 30), new System.Windows.Size(120, 60));
-            drawingContext.DrawRectangle(System.Windows.Media.Brushes.White, (System.Windows.Media.Pen)null, rect2);
-            drawingContext.DrawText(
-                        new FormattedText("Reps:",
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Verdana"),
-                        18, System.Windows.Media.Brushes.Black),
-                        new System.Windows.Point(this.displayWidth - 120, 30)
-                    );
-            drawingContext.DrawText(
-                        new FormattedText(" " + (int)reps/4,
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Verdana"),
-                        24, System.Windows.Media.Brushes.Black),
-                        new System.Windows.Point(this.displayWidth - 130, 60)
-                    );
-            if (restFramecount > 100) {
+
+            if (String.Equals(exerciseType, "Jumping Jacks"))
+            {
+                //draw rep count window for Jumping Jacks
+                Rect rect2 = new Rect(new System.Windows.Point(370, 30), new System.Windows.Size(120, 60));
+                drawingContext.DrawRectangle(System.Windows.Media.Brushes.White, (System.Windows.Media.Pen)null, rect2);
                 drawingContext.DrawText(
-                        new FormattedText("You are not exercising. Do you want to exit?",
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Verdana"),
-                        12, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(150, this.displayHeight - 50)
-                    );
+                            new FormattedText("Reps:",
+                            CultureInfo.GetCultureInfo("en-us"),
+                            FlowDirection.LeftToRight,
+                            new Typeface("Verdana"),
+                            18, System.Windows.Media.Brushes.Black),
+                            new System.Windows.Point(this.displayWidth - 120, 30)
+                        );
+                drawingContext.DrawText(
+                            new FormattedText(" " + (int)reps / 4,
+                            CultureInfo.GetCultureInfo("en-us"),
+                            FlowDirection.LeftToRight,
+                            new Typeface("Verdana"),
+                            24, System.Windows.Media.Brushes.Black),
+                            new System.Windows.Point(this.displayWidth - 130, 60)
+                        );
+
+                // check for no movement
+                if (restFramecount > 100)
+                {
+                    drawingContext.DrawText(
+                            new FormattedText("You are not exercising. Do you want to exit?",
+                            CultureInfo.GetCultureInfo("en-us"),
+                            FlowDirection.LeftToRight,
+                            new Typeface("Verdana"),
+                            12, System.Windows.Media.Brushes.White),
+                            new System.Windows.Point(150, this.displayHeight - 50)
+                        );
+                }
             }
-            
+
+            //draw count down window for squat
+            else if (String.Equals(exerciseType, "Squat"))
+            {
+                if (!watchStarted)
+                {
+                    watchStarted = true;
+                    startTime = DateTime.Now;
+                }
+                else
+                {
+                    drawingContext.DrawText(
+                                            new FormattedText("Static Squat",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            30, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 400, 10)
+                                            );
+                    drawingContext.DrawText(
+                                            new FormattedText("Swing arms to shoulder level",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            15, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 400, 40)
+                                            );
+                    drawingContext.DrawText(
+                                            new FormattedText("Bend knees, keep chest up",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            15, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 400, 60)
+                                            );
+                    drawingContext.DrawText(
+                                            new FormattedText("Pause and stay in this position",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            15, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 400, 80)
+                                            );
+
+                    elapsedTime = DateTime.Now - startTime;
+                    double remainTime = 40.0 - (elapsedTime.Seconds);
+                    double startIn = 10.0 - (elapsedTime.Seconds);
+                    // reday info
+                    if(elapsedTime.Seconds < 10)
+                    {
+                         drawingContext.DrawText(
+                                                new FormattedText("READY",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                60, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 320, 160)
+                                                );
+
+                        drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                    new System.Windows.Point(445, 65), 63.0, 63.0);
+                        drawingContext.DrawText(
+                                    new FormattedText("Start In",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    20, System.Windows.Media.Brushes.White),
+                                    new System.Windows.Point(this.displayWidth - 110, 30)
+                                );
+                        drawingContext.DrawText(
+                                    new FormattedText(" 00:" + startIn + "s",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    25, System.Windows.Media.Brushes.White),
+                                    new System.Windows.Point(this.displayWidth - 120, 60)
+                                );
+                    }
+
+                    //start counting down
+                    else if(elapsedTime.Seconds >= 10 && elapsedTime.Seconds <= 40)
+                    {
+                        drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                    new System.Windows.Point(445, 65), 63.0, 63.0);
+                        drawingContext.DrawText(
+                                    new FormattedText("Hold For",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    20, System.Windows.Media.Brushes.White),
+                                    new System.Windows.Point(this.displayWidth - 110, 30)
+                                );
+                        drawingContext.DrawText(
+                                    new FormattedText(" 00:" + remainTime + "s",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    25, System.Windows.Media.Brushes.White),
+                                    new System.Windows.Point(this.displayWidth - 120, 60)
+                                );
+                    }
+                    //finish
+                    else
+                    {
+                        drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                    new System.Windows.Point(445, 65), 63.0, 63.0);
+                        drawingContext.DrawText(
+                                    new FormattedText("Good Job!",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    20, System.Windows.Media.Brushes.White),
+                                    new System.Windows.Point(this.displayWidth - 115, 55)
+                                );
+
+                        //watchStarted = false;
+                    }
+                }
+            }
 
 
             List<string> warnings = this.CheckForWrongPosture(interestedJointAngles, jointPoints, drawingContext);
