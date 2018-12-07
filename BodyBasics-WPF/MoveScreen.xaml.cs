@@ -17,6 +17,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Windows.Media.Imaging;
     using System.Windows.Media.Media3D;
     using Microsoft.Kinect;
+    using System.Threading;
+    using System.Windows.Input;
+    using System.Collections.Concurrent;
 
     /// <summary>
     /// Interaction logic for MoveScreen
@@ -145,7 +148,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         public static int prevExerciseState = 0;
         public static int exerciseState = 0;
         public static int reps = 0;
-
+        public static int cal = 0;
+        public bool paused = false;
+        Stopwatch stopWatch = new Stopwatch();
         public static int restFramecount = 50;
 
         // stop watch for static squat countdown
@@ -154,12 +159,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         // track if countdown already started
         private Boolean watchStarted;
+        private Boolean jumpJackStarted;
 
         // track if squat in correct form
         private Boolean inPosition;
 
         // total exercise time for squat
         private double totalSquatTime;
+
+        private static EventWaitHandle waitHandle = new ManualResetEvent(initialState: true);
 
         /// <summary>
         /// Initializes a new instance of the MoveScreen class.
@@ -219,7 +227,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
 
-            
+
             // populate body colors, one for each BodyIndex
             this.bodyColors = new List<Pen>();
 
@@ -317,6 +325,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="e">event arguments</param>
         private void MoveScreen_Closing(object sender, CancelEventArgs e)
         {
+            reps = 0;
             if (this.bodyFrameReader != null)
             {
                 // BodyFrameReader is IDisposable
@@ -338,82 +347,88 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="e">event arguments</param>
         private void Reader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
-            bool dataReceived = false;
-
-            using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
+            if (paused == false)
             {
-                if (bodyFrame != null)
+                bool dataReceived = false;
+
+                using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
                 {
-                    if (this.bodies == null)
+                    if (bodyFrame != null)
                     {
-                        this.bodies = new Body[bodyFrame.BodyCount];
-                    }
-
-                    // The first time GetAndRefreshBodyData is called, Kinect will allocate each Body in the array.
-                    // As long as those body objects are not disposed and not set to null in the array,
-                    // those body objects will be re-used.
-                    bodyFrame.GetAndRefreshBodyData(this.bodies);
-                    dataReceived = true;
-                }
-            }
-
-            if (dataReceived)
-            {
-                using (DrawingContext dc = this.drawingGroup.Open())
-                {
-                    // Draw a transparent background to set the render size
-                    dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-
-                    int penIndex = 0;
-                    foreach (Body body in this.bodies)
-                    {
-                        Pen drawPen = this.bodyColors[penIndex++];
-
-                        if (body.IsTracked)
+                        if (this.bodies == null)
                         {
-                            this.DrawClippedEdges(body, dc);
+                            this.bodies = new Body[bodyFrame.BodyCount];
+                        }
 
-                            IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+                        // The first time GetAndRefreshBodyData is called, Kinect will allocate each Body in the array.
+                        // As long as those body objects are not disposed and not set to null in the array,
+                        // those body objects will be re-used.
+                        bodyFrame.GetAndRefreshBodyData(this.bodies);
+                        dataReceived = true;
+                    }
+                }
 
-                            // convert the joint points to depth (display) space
-                            Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-                            List<JointType> interestedJoints = new List<JointType>();
-                            interestedJoints.Add(JointType.ElbowLeft);
-                            interestedJoints.Add(JointType.ElbowRight);
-                            foreach (JointType jointType in joints.Keys)
+                if (dataReceived)
+                {
+
+                    using (DrawingContext dc = this.drawingGroup.Open())
+                    {
+                        // Draw a transparent background to set the render size
+                        dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+
+                        int penIndex = 0;
+                        foreach (Body body in this.bodies)
+                        {
+                            Pen drawPen = this.bodyColors[penIndex++];
+
+                            if (body.IsTracked)
                             {
-                                // sometimes the depth(Z) of an inferred joint may show as negative
-                                // clamp down to 0.1f to prevent coordinatemapper from returning (-Infinity, -Infinity)
+                                this.DrawClippedEdges(body, dc);
 
-                                CameraSpacePoint position = joints[jointType].Position;
-                                if (position.Z < 0)
+                                IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+
+                                // convert the joint points to depth (display) space
+                                Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+                                List<JointType> interestedJoints = new List<JointType>();
+                                interestedJoints.Add(JointType.ElbowLeft);
+                                interestedJoints.Add(JointType.ElbowRight);
+                                foreach (JointType jointType in joints.Keys)
                                 {
-                                    position.Z = InferredZPositionClamp;
+                                    // sometimes the depth(Z) of an inferred joint may show as negative
+                                    // clamp down to 0.1f to prevent coordinatemapper from returning (-Infinity, -Infinity)
+
+                                    CameraSpacePoint position = joints[jointType].Position;
+                                    if (position.Z < 0)
+                                    {
+                                        position.Z = InferredZPositionClamp;
+                                    }
+
+                                    DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
+                                    jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                                 }
+                                IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
+                                this.DrawBody(joints, jointPoints, dc, drawPen, interestedJointAngles);
 
-                                DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
-                                jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
-                            }
-                            IDictionary<string, double> interestedJointAngles = this.GetInterstedJointAngles(joints);
-                            this.DrawBody(joints, jointPoints, dc, drawPen, interestedJointAngles);
-
-                            this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
-                            this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
-                            exerciseState = this.getExerciseState(joints, jointPoints, dc, drawPen, interestedJointAngles);
-                            if (exerciseState != prevExerciseState)
-                            {
-                                reps += 1;
-                                prevExerciseState = exerciseState;
-                                restFramecount = 0;
-                            }
-                            else {
-                                restFramecount += 1;
+                                this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
+                                this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+                                exerciseState = this.getExerciseState(joints, jointPoints, dc, drawPen, interestedJointAngles);
+                                if (exerciseState != prevExerciseState)
+                                {
+                                    reps += 1;
+                                    prevExerciseState = exerciseState;
+                                    restFramecount = 0;
+                                }
+                                else
+                                {
+                                    restFramecount += 1;
+                                }
                             }
                         }
+
+                        // prevent drawing outside of our render area
+                        this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                     }
 
-                    // prevent drawing outside of our render area
-                    this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
             }
         }
@@ -432,11 +447,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             DrawingContext drawingContext, Pen drawingPen, IDictionary<string, double> interestedJointAngles)
         {
             int e;
-            if (interestedJointAngles["RightShoulder"] < 140.00 && interestedJointAngles["LeftShoulder"] < 140.00)
+            if (interestedJointAngles["RightShoulder"] < 140.00 && interestedJointAngles["LeftShoulder"] < 140.00 && interestedJointAngles["Groin"] < 30)
             {
                 return 0;
             }
-            else if (interestedJointAngles["RightShoulder"] > 140.00 && interestedJointAngles["LeftShoulder"] > 140.00)
+            else if (interestedJointAngles["RightShoulder"] > 140.00 && interestedJointAngles["LeftShoulder"] > 140.00 && interestedJointAngles["Groin"] > 30)
             {
                 return 1;
             }
@@ -472,16 +487,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 { "LeftKnee", new List<JointType> { JointType.KneeLeft, JointType.HipLeft, JointType.AnkleLeft }},
                 { "Back", new List<JointType> { JointType.SpineMid, JointType.SpineBase, JointType.SpineShoulder }},
                 { "Groin", new List<JointType> { JointType.SpineBase, JointType.KneeRight, JointType.KneeLeft }}
-         
+
         };
 
             IDictionary<string, double> interestedJointAngles = new Dictionary<string, double>();
-            foreach (KeyValuePair<string, List<JointType>> kv in interestedJoints) {
+            foreach (KeyValuePair<string, List<JointType>> kv in interestedJoints)
+            {
                 interestedJointAngles.Add(kv.Key, this.GetAngleBetweenJoints(kv.Value[0], kv.Value[1], kv.Value[2], joints));
             }
             return interestedJointAngles;
         }
-        
+
         public void PrintJointWarnings(String warnings, DrawingContext drawingContext, Point point)
         {
             int yStart = displayHeight - 100 - TEXTWIDTH;
@@ -495,7 +511,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     new System.Windows.Point(point.X, point.Y + TEXTWIDTH)
                 );
             yStart -= TEXTWIDTH;
- 
+
         }
 
 
@@ -504,7 +520,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             int yStart = displayHeight - 120 - TEXTWIDTH;
             Rect rect = new Rect(new System.Windows.Point(0, 300), new System.Windows.Size(150, 150));
             //drawingContext.DrawRectangle(System.Windows.Media.Brushes.OrangeRed, (System.Windows.Media.Pen)null, rect);
-            foreach (string warn in warnings) {
+            foreach (string warn in warnings)
+            {
                 drawingContext.DrawText(
                         new FormattedText(warn,
                         CultureInfo.GetCultureInfo("en-us"),
@@ -517,7 +534,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
         }
 
-        public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext) {
+        public List<string> CheckForWrongPosture(IDictionary<string, double> interestedJointAngles, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext)
+        {
             List<string> warnings = new List<string>();
             if (string.Equals(exerciseType, "Jumping Jacks"))
             {
@@ -664,165 +682,191 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="jointPoints">translated positions of joints to draw</param>
         /// <param name="drawingContext">drawing context to draw to</param>
         /// <param name="drawingPen">specifies color to draw a specific body</param>
-        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, 
+        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext,
             Pen drawingPen, IDictionary<string, double> interestedJointAngles)
         {
-
-            
-            int start = -TEXTWIDTH;
-            foreach (KeyValuePair<string, double> kv in interestedJointAngles)
+            if (paused == false)
             {
-                if (kv.Value > 0.0)
+
+                int start = -TEXTWIDTH;
+                foreach (KeyValuePair<string, double> kv in interestedJointAngles)
                 {
-                    drawingContext.DrawText(
-                        new FormattedText(  kv.Key.PadLeft(10, ' ') + "    " +kv.Value.ToString(),
-                        CultureInfo.GetCultureInfo("en-us"),
-                        FlowDirection.LeftToRight,
-                        new Typeface("Verdana"),
-                        6, System.Windows.Media.Brushes.White),
-                        new System.Windows.Point(0, start + 6)
-                    );
-                    start += 6;
-                }
-            }
-
-            if (String.Equals(exerciseType, "Jumping Jacks"))
-            {
-                //draw rep count window for Jumping Jacks
-                Rect rect2 = new Rect(new System.Windows.Point(370, 30), new System.Windows.Size(120, 60));
-                drawingContext.DrawRectangle(System.Windows.Media.Brushes.White, (System.Windows.Media.Pen)null, rect2);
-                drawingContext.DrawText(
-                            new FormattedText("Reps:",
-                            CultureInfo.GetCultureInfo("en-us"),
-                            FlowDirection.LeftToRight,
-                            new Typeface("Verdana"),
-                            18, System.Windows.Media.Brushes.Black),
-                            new System.Windows.Point(this.displayWidth - 120, 30)
-                        );
-                drawingContext.DrawText(
-                            new FormattedText(" " + (int)reps / 4,
-                            CultureInfo.GetCultureInfo("en-us"),
-                            FlowDirection.LeftToRight,
-                            new Typeface("Verdana"),
-                            24, System.Windows.Media.Brushes.Black),
-                            new System.Windows.Point(this.displayWidth - 130, 60)
-                        );
-
-                // check for no movement
-                if (restFramecount > 100)
-                {
-                    drawingContext.DrawText(
-                            new FormattedText("You are not exercising. Do you want to exit?",
-                            CultureInfo.GetCultureInfo("en-us"),
-                            FlowDirection.LeftToRight,
-                            new Typeface("Verdana"),
-                            12, System.Windows.Media.Brushes.White),
-                            new System.Windows.Point(150, this.displayHeight - 50)
-                        );
-                }
-            }
-
-            //draw count down window for squat
-            else if (String.Equals(exerciseType, "Squat"))
-            {
-                if (!watchStarted)
-                {
-                    watchStarted = true;
-                    startTime = DateTime.Now;
-                    inPosition = true;
-                    totalSquatTime = 40.0;
-                }
-                else
-                {
-                    drawingContext.DrawText(
-                                            new FormattedText("Static Squat",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            30, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 400, 10)
-                                            );
-                    drawingContext.DrawText(
-                                            new FormattedText("Swing arms to shoulder level",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            15, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 400, 40)
-                                            );
-                    drawingContext.DrawText(
-                                            new FormattedText("Bend knees, keep chest up",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            15, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 400, 60)
-                                            );
-                    drawingContext.DrawText(
-                                            new FormattedText("Pause and stay in this position",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            15, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 400, 80)
-                                            );
-
-                    elapsedTime = DateTime.Now - startTime;
-                    double remainTime = totalSquatTime - (elapsedTime.Seconds);
-                    double startIn = 10.0 - (elapsedTime.Seconds);
-
-                    // reday info for 10 sec
-                    if(elapsedTime.Seconds < 10)
+                    if (kv.Value > 0.0)
                     {
-                         drawingContext.DrawText(
-                                                new FormattedText("READY",
+                        drawingContext.DrawText(
+                            new FormattedText(kv.Key.PadLeft(10, ' ') + "    " + kv.Value.ToString(),
+                            CultureInfo.GetCultureInfo("en-us"),
+                            FlowDirection.LeftToRight,
+                            new Typeface("Verdana"),
+                            6, System.Windows.Media.Brushes.White),
+                            new System.Windows.Point(0, start + 6)
+                        );
+                        start += 6;
+                    }
+                }
+
+                if (String.Equals(exerciseType, "Jumping Jacks"))
+                {
+                    int displayTime = elapsedTime.Seconds - 10;
+                    if (displayTime <= 0)
+                    {
+                        displayTime = 0;
+                    }
+                    else if (displayTime >= 30)
+                    {
+                        displayTime = 30;
+                    }
+
+                    double avgRep = (reps / 4) / (displayTime * 1.0);
+                    double jumpCal = 0.8; //cal burned for one jumping jacks
+                    double totalCal = jumpCal * (reps / 4);
+                    double avgCal = totalCal / displayTime;
+
+                    avgRep = Math.Round(avgRep, 2);
+                    avgCal = Math.Round(avgCal, 2);
+
+                    if (displayTime == 0)
+                    {
+                        avgRep = 0;
+                        avgCal = 0;
+                    }
+
+
+                    //draw bounding box for summary
+
+                    Rect sumBox2 = new Rect(new System.Windows.Point(355, 240), new System.Windows.Size(160, 50));
+                    drawingContext.DrawRectangle(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null, sumBox2);
+
+                    drawingContext.DrawText(
+                                new FormattedText("Burned: " + totalCal + " Cals",
+                                CultureInfo.GetCultureInfo("en-us"),
+                                FlowDirection.LeftToRight,
+                                new Typeface("Verdana"),
+                                16, System.Windows.Media.Brushes.White),
+                                new System.Windows.Point(this.displayWidth - 145, 245)
+                            );
+
+                    Rect sumBox4 = new Rect(new System.Windows.Point(355, 290), new System.Windows.Size(160, 50));
+                    drawingContext.DrawRectangle(System.Windows.Media.Brushes.DarkViolet, (System.Windows.Media.Pen)null, sumBox4);
+                    drawingContext.DrawText(
+                                new FormattedText("" + avgRep + " Reps/Sec",
+                                CultureInfo.GetCultureInfo("en-us"),
+                                FlowDirection.LeftToRight,
+                                new Typeface("Verdana"),
+                                16, System.Windows.Media.Brushes.White),
+                                new System.Windows.Point(this.displayWidth - 145, 295)
+                            );
+
+                    Rect sumBox5 = new Rect(new System.Windows.Point(355, 340), new System.Windows.Size(160, 50));
+                    drawingContext.DrawRectangle(System.Windows.Media.Brushes.DarkBlue, (System.Windows.Media.Pen)null, sumBox5);
+                    drawingContext.DrawText(
+                                new FormattedText("" + avgCal + " Cals/Sec",
+                                CultureInfo.GetCultureInfo("en-us"),
+                                FlowDirection.LeftToRight,
+                                new Typeface("Verdana"),
+                                16, System.Windows.Media.Brushes.White),
+                                new System.Windows.Point(this.displayWidth - 145, 345)
+                            );
+
+                    if (!jumpJackStarted)
+                    {
+                        jumpJackStarted = true;
+                        startTime = DateTime.Now;
+                    }
+                    else
+                    {
+                        drawingContext.DrawText(
+                                                new FormattedText("Jumps Jacks",
                                                 CultureInfo.GetCultureInfo("en-us"),
                                                 FlowDirection.LeftToRight,
                                                 new Typeface("Verdana"),
-                                                60, System.Windows.Media.Brushes.White),
-                                                new System.Windows.Point(this.displayWidth - 340, 160)
+                                                30, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 400, 10)
+                                                );
+                        drawingContext.DrawText(
+                                                new FormattedText("do as many as you can!",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                13, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 390, 45)
                                                 );
 
-                        drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
-                                                    new System.Windows.Point(445, 65), 63.0, 63.0);
                         drawingContext.DrawText(
-                                    new FormattedText("Start In",
-                                    CultureInfo.GetCultureInfo("en-us"),
-                                    FlowDirection.LeftToRight,
-                                    new Typeface("Verdana"),
-                                    20, System.Windows.Media.Brushes.White),
-                                    new System.Windows.Point(this.displayWidth - 110, 30)
-                                );
+                                                new FormattedText("Stand straight with hands by your side",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                13, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(0, 80)
+                                                );
                         drawingContext.DrawText(
-                                    new FormattedText(" 00:" + startIn + "s",
-                                    CultureInfo.GetCultureInfo("en-us"),
-                                    FlowDirection.LeftToRight,
-                                    new Typeface("Verdana"),
-                                    25, System.Windows.Media.Brushes.White),
-                                    new System.Windows.Point(this.displayWidth - 120, 60)
-                                );
+                                                new FormattedText("Jump again and return to the starting position",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                13, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(0, 95)
+                                                );
+                        drawingContext.DrawText(
+                                                new FormattedText("Repeat until time is up",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                13, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(0, 110)
+                                                );
 
-                        inPosition = true;
-                        totalSquatTime = 40.0;
-                    }
+                        elapsedTime = DateTime.Now - startTime - stopWatch.Elapsed;
+                        double startIn = 10.0 - (elapsedTime.Seconds);
 
-                    //start counting down for 30 sec
-                    else
-                    {
-                        if (remainTime >= 0)
+                        // reday info for 10 sec
+                        if (elapsedTime.Seconds < 10)
                         {
-                            //increment remaining time if not in position
-                            if (!inPosition)
+
+                            if (elapsedTime.Seconds >= 0 && elapsedTime.Seconds < 3)
                             {
-                                totalSquatTime += 0.035;
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.Orange, (System.Windows.Media.Pen)null,
+                                    new System.Windows.Point(this.displayWidth - 300, 180), 100.0, 40.0);
+                            }
+                            else if (elapsedTime.Seconds >= 3 && elapsedTime.Seconds < 7)
+                            {
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.OrangeRed, (System.Windows.Media.Pen)null,
+                                    new System.Windows.Point(this.displayWidth - 300, 180), 100.0, 40.0);
+                            }
+                            else if (elapsedTime.Seconds >= 7)
+                            {
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.Red, (System.Windows.Media.Pen)null,
+                                    new System.Windows.Point(this.displayWidth - 300, 180), 100.0, 40.0);
                             }
 
-                            remainTime = Math.Round(remainTime, 1);
 
+                            if (elapsedTime.Seconds < 9)
+                            {
+                                drawingContext.DrawText(
+                                                       new FormattedText("READY",
+                                                       CultureInfo.GetCultureInfo("en-us"),
+                                                       FlowDirection.LeftToRight,
+                                                       new Typeface("Verdana"),
+                                                       40, System.Windows.Media.Brushes.White),
+                                                       new System.Windows.Point(this.displayWidth - 370, 150)
+                                                       );
+                            }
+                            else
+                            {
+                                drawingContext.DrawText(
+                                                       new FormattedText("Go!!",
+                                                       CultureInfo.GetCultureInfo("en-us"),
+                                                       FlowDirection.LeftToRight,
+                                                       new Typeface("Verdana"),
+                                                       40, System.Windows.Media.Brushes.White),
+                                                       new System.Windows.Point(this.displayWidth - 345, 150)
+                                                       );
+                            }
                             drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
                                                         new System.Windows.Point(445, 65), 63.0, 63.0);
                             drawingContext.DrawText(
-                                        new FormattedText("Hold For",
+                                        new FormattedText("Start In",
                                         CultureInfo.GetCultureInfo("en-us"),
                                         FlowDirection.LeftToRight,
                                         new Typeface("Verdana"),
@@ -830,67 +874,278 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                         new System.Windows.Point(this.displayWidth - 110, 30)
                                     );
                             drawingContext.DrawText(
-                                        new FormattedText(" 00:" + remainTime + "s",
+                                        new FormattedText(" 00:" + startIn + "s",
                                         CultureInfo.GetCultureInfo("en-us"),
                                         FlowDirection.LeftToRight,
                                         new Typeface("Verdana"),
-                                        22, System.Windows.Media.Brushes.White),
+                                        25, System.Windows.Media.Brushes.White),
                                         new System.Windows.Point(this.displayWidth - 120, 60)
                                     );
+
+                            totalSquatTime = 40.0;
+                            reps = 0; //reset rep count
                         }
 
-                        //finish
+
+                        //start counting down for 30 sec
                         else
                         {
+
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                            new System.Windows.Point(445, 65), 63.0, 63.0);
+
+                                drawingContext.DrawText(
+                                            new FormattedText("Time:",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            20, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 110, 30)
+                                        );
+                                drawingContext.DrawText(
+                                            new FormattedText(" 00:" + displayTime + "s",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            22, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 120, 60)
+                                        );
+
+                                //draw rep count
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightPink, (System.Windows.Media.Pen)null,
+                                                            new System.Windows.Point(405, 125), 35.0, 35.0);
+                                drawingContext.DrawText(
+                                            new FormattedText("Reps",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            20, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 132, 100)
+                                        );
+                                drawingContext.DrawText(
+                                            new FormattedText(" " + (int)reps / 4,
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            22, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 120, 130)
+                                        );
+
+                            //finish, show workout results
+                            if (elapsedTime.Seconds >= 41 && elapsedTime.Seconds <= 70)
+                            {
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                            new System.Windows.Point(445, 65), 63.0, 63.0);
+                                drawingContext.DrawText(
+                                            new FormattedText("Good Job!",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            20, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 115, 55)
+                                        );
+
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightBlue, (System.Windows.Media.Pen)null,
+                                        new System.Windows.Point(this.displayWidth - 300, 180), 100.0, 40.0);
+
+                                drawingContext.DrawText(
+                                                       new FormattedText("Finish",
+                                                       CultureInfo.GetCultureInfo("en-us"),
+                                                       FlowDirection.LeftToRight,
+                                                       new Typeface("Verdana"),
+                                                       40, System.Windows.Media.Brushes.White),
+                                                       new System.Windows.Point(this.displayWidth - 360, 160)
+                                                       );
+
+                            }
+                        }
+
+
+                        // check for no movement
+                        if (restFramecount > 100)
+                        {
+                            drawingContext.DrawText(
+                                    new FormattedText("You are not exercising. Do you want to exit?",
+                                    CultureInfo.GetCultureInfo("en-us"),
+                                    FlowDirection.LeftToRight,
+                                    new Typeface("Verdana"),
+                                    12, System.Windows.Media.Brushes.White),
+                                    new System.Windows.Point(70, this.displayHeight - 50)
+                                );
+                        }
+                    }
+                }
+
+                //draw count down window for squat
+                else if (String.Equals(exerciseType, "Squat"))
+                {
+                    if (!watchStarted)
+                    {
+                        watchStarted = true;
+                        startTime = DateTime.Now;
+                        inPosition = true;
+                        totalSquatTime = 40.0;
+                    }
+                    else
+                    {
+                        drawingContext.DrawText(
+                                                new FormattedText("Static Squat",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                30, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 400, 10)
+                                                );
+                        drawingContext.DrawText(
+                                                new FormattedText("Swing arms to shoulder level",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                15, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 400, 40)
+                                                );
+                        drawingContext.DrawText(
+                                                new FormattedText("Bend knees, keep chest up",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                15, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 400, 60)
+                                                );
+                        drawingContext.DrawText(
+                                                new FormattedText("Pause and stay in this position",
+                                                CultureInfo.GetCultureInfo("en-us"),
+                                                FlowDirection.LeftToRight,
+                                                new Typeface("Verdana"),
+                                                15, System.Windows.Media.Brushes.White),
+                                                new System.Windows.Point(this.displayWidth - 400, 80)
+                                                );
+
+                        elapsedTime = DateTime.Now - startTime - stopWatch.Elapsed;
+                        double remainTime = totalSquatTime - (elapsedTime.Seconds);
+                        double startIn = 10.0 - (elapsedTime.Seconds);
+
+                        // reday info for 10 sec
+                        if (elapsedTime.Seconds < 10)
+                        {
+                            drawingContext.DrawText(
+                                                   new FormattedText("READY",
+                                                   CultureInfo.GetCultureInfo("en-us"),
+                                                   FlowDirection.LeftToRight,
+                                                   new Typeface("Verdana"),
+                                                   60, System.Windows.Media.Brushes.White),
+                                                   new System.Windows.Point(this.displayWidth - 340, 160)
+                                                   );
+
                             drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
                                                         new System.Windows.Point(445, 65), 63.0, 63.0);
                             drawingContext.DrawText(
-                                        new FormattedText("Good Job!",
+                                        new FormattedText("Start In",
                                         CultureInfo.GetCultureInfo("en-us"),
                                         FlowDirection.LeftToRight,
                                         new Typeface("Verdana"),
                                         20, System.Windows.Media.Brushes.White),
-                                        new System.Windows.Point(this.displayWidth - 115, 55)
+                                        new System.Windows.Point(this.displayWidth - 110, 30)
+                                    );
+                            drawingContext.DrawText(
+                                        new FormattedText(" 00:" + startIn + "s",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        25, System.Windows.Media.Brushes.White),
+                                        new System.Windows.Point(this.displayWidth - 120, 60)
                                     );
 
-                            //watchStarted = false;
+                            inPosition = true;
+                            totalSquatTime = 40.0;
                         }
+
+                        //start counting down for 30 sec
+                        else
+                        {
+                            if (remainTime >= 0)
+                            {
+                                //increment remaining time if not in position
+                                if (!inPosition)
+                                {
+                                    totalSquatTime += 0.035;
+                                }
+
+                                remainTime = Math.Round(remainTime, 1);
+
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                            new System.Windows.Point(445, 65), 63.0, 63.0);
+                                drawingContext.DrawText(
+                                            new FormattedText("Hold For",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            20, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 110, 30)
+                                        );
+                                drawingContext.DrawText(
+                                            new FormattedText(" 00:" + remainTime + "s",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            22, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 120, 60)
+                                        );
+                            }
+
+                            //finish
+                            else
+                            {
+                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                            new System.Windows.Point(445, 65), 63.0, 63.0);
+                                drawingContext.DrawText(
+                                            new FormattedText("Good Job!",
+                                            CultureInfo.GetCultureInfo("en-us"),
+                                            FlowDirection.LeftToRight,
+                                            new Typeface("Verdana"),
+                                            20, System.Windows.Media.Brushes.White),
+                                            new System.Windows.Point(this.displayWidth - 115, 58)
+                                        );
+
+                                //watchStarted = false;
+                            }
+                        }
+
+                    }
+                }
+
+
+                List<string> warnings = this.CheckForWrongPosture(interestedJointAngles, jointPoints, drawingContext);
+                this.PrintWarnings(warnings, drawingContext);
+
+
+
+                // Draw the bones
+                foreach (var bone in this.bones)
+                {
+                    this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
+                }
+
+                // Draw the joints
+                foreach (JointType jointType in joints.Keys)
+                {
+                    Brush drawBrush = null;
+
+                    TrackingState trackingState = joints[jointType].TrackingState;
+
+                    if (trackingState == TrackingState.Tracked)
+                    {
+                        drawBrush = this.trackedJointBrush;
+                    }
+                    else if (trackingState == TrackingState.Inferred)
+                    {
+                        drawBrush = this.inferredJointBrush;
                     }
 
-                }
-            }
-
-
-            List<string> warnings = this.CheckForWrongPosture(interestedJointAngles, jointPoints, drawingContext);
-            this.PrintWarnings(warnings, drawingContext);
-
-          
-
-            // Draw the bones
-            foreach (var bone in this.bones)
-            {
-                this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
-            }
-
-            // Draw the joints
-            foreach (JointType jointType in joints.Keys)
-            {
-                Brush drawBrush = null;
-
-                TrackingState trackingState = joints[jointType].TrackingState;
-
-                if (trackingState == TrackingState.Tracked)
-                {
-                    drawBrush = this.trackedJointBrush;
-                }
-                else if (trackingState == TrackingState.Inferred)
-                {
-                    drawBrush = this.inferredJointBrush;
-                }
-
-                if (drawBrush != null)
-                {
-                    drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
+                    if (drawBrush != null)
+                    {
+                        drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
+                    }
                 }
             }
         }
@@ -1001,6 +1256,21 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // on failure, set the status text
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
+        }
+        
+        private void Button_Click_Pause(object sender, RoutedEventArgs e)
+        {
+           if(paused == false)
+            {
+                paused = true;
+                stopWatch.Start();
+            }
+            else
+            {
+                paused = false;
+                stopWatch.Stop();
+            }
+
         }
     }
 }
