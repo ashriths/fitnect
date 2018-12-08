@@ -711,11 +711,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     {
                         displayTime = 0;
                     }
-                    else if (displayTime >= 30)
-                    {
-                        displayTime = 30;
-                    }
-
+                    
                     double avgRep = (reps / 4) / (displayTime * 1.0);
                     double jumpCal = 0.8; //cal burned for one jumping jacks
                     double totalCal = jumpCal * (reps / 4);
