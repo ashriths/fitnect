@@ -19,9 +19,11 @@
         </one-of>
       </item>
       <item>
-        <tag>LEFT</tag>
+        <tag>Pause</tag>
         <one-of>
-          <item> turn left </item>
+          <item> pause </item>
+          <item> stop </item>
+          <item> wait </item>
         </one-of>
       </item>
       <item>

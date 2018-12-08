@@ -34,7 +34,7 @@
 				</ImageBrush>
 			</Button.Background>
 		</Button>
-		<Button Content="Exit" HorizontalAlignment="Center" Margin="468,542,444,44" VerticalAlignment="Center" Width="146" Height="60"  FontSize="36" Click="Button_Click_Exit" FontFamily="Arial Rounded MT Bold">
+		<Button Content="Exit" HorizontalAlignment="Center" Margin="468,461,444,125" VerticalAlignment="Center" Width="146" Height="60"  FontSize="36" Click="Button_Click_Exit" FontFamily="Arial Rounded MT Bold">
 			<Button.Effect>
 				<DropShadowEffect/>
 			</Button.Effect>
@@ -96,10 +96,11 @@
 				<DropShadowEffect ShadowDepth="10" BlurRadius="10"/>
 			</TextBox.Effect>
 		</TextBox>
-		<Button Name="Enable" Content="Enable hand tracking" HorizontalAlignment="Center" Margin="327,445,305,141" VerticalAlignment="Center" Width="426" Height="60"  FontSize="36" Click="Button_Click_Enable" FontFamily="Arial Rounded MT Bold">
+		<!--<Button Name="Enable" Content="Enable hand trcking" HorizontalAlignment="Center" Margin="327,445,305,141" VerticalAlignment="Center" Width="426" Height="60"  FontSize="36" Click="Button_Click_Enable" FontFamily="Arial Rounded MT Bold">
+			<Button.Effect>
 			<Button.Effect>
 				<DropShadowEffect/>
 			</Button.Effect>
-		</Button>
+		</Button>-->
 	</Grid>
 </Window>

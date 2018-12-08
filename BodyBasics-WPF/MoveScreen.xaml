@@ -28,6 +28,6 @@
 		<StatusBar Grid.Row="2" HorizontalAlignment="Stretch" Name="statusBar" VerticalAlignment="Bottom" Background="White" Foreground="{StaticResource MediumGreyBrush}">
 			<StatusBarItem Content="{Binding StatusText}" />
 		</StatusBar>
-		<Button x:Name="Pause" Content="Pause" HorizontalAlignment="Left" Margin="47,598,0,0" Grid.Row="1" VerticalAlignment="Top" Width="172" Height="60" AutomationProperties.Name="Button" FontSize="36" Click="Button_Click_Pause"/>
+		<Button x:Name="Pause" Content="Pause" HorizontalAlignment="Left" Margin="113,574,0,0" Grid.Row="1" VerticalAlignment="Top" Width="172" Height="60" AutomationProperties.Name="Button" FontSize="36" Click="Button_Click_Pause"/>
 	</Grid>
 </Window>

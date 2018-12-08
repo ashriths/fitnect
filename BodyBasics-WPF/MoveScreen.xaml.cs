@@ -652,7 +652,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     PrintJointWarnings("Move Left Arm!", drawingContext, jointPoints[JointType.ShoulderLeft]);
                 }
             }
-
             /*if (interestedJointAngles.ContainsKey("RightLeg"))
             {
                 if (interestedJointAngles["RightLeg"] > 50.00)
@@ -891,45 +890,45 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         else
                         {
 
-                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
-                                                            new System.Windows.Point(445, 65), 63.0, 63.0);
+                            drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
+                                                        new System.Windows.Point(445, 65), 63.0, 63.0);
 
-                                drawingContext.DrawText(
-                                            new FormattedText("Time:",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            20, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 110, 30)
-                                        );
-                                drawingContext.DrawText(
-                                            new FormattedText(" 00:" + displayTime + "s",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            22, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 120, 60)
-                                        );
+                            drawingContext.DrawText(
+                                        new FormattedText("Time:",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        20, System.Windows.Media.Brushes.White),
+                                        new System.Windows.Point(this.displayWidth - 110, 30)
+                                    );
+                            drawingContext.DrawText(
+                                        new FormattedText(" 00:" + displayTime + "s",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        22, System.Windows.Media.Brushes.White),
+                                        new System.Windows.Point(this.displayWidth - 120, 60)
+                                    );
 
-                                //draw rep count
-                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightPink, (System.Windows.Media.Pen)null,
-                                                            new System.Windows.Point(405, 125), 35.0, 35.0);
-                                drawingContext.DrawText(
-                                            new FormattedText("Reps",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            20, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 132, 100)
-                                        );
-                                drawingContext.DrawText(
-                                            new FormattedText(" " + (int)reps / 4,
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            22, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 120, 130)
-                                        );
+                            //draw rep count
+                            drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightPink, (System.Windows.Media.Pen)null,
+                                                        new System.Windows.Point(405, 125), 35.0, 35.0);
+                            drawingContext.DrawText(
+                                        new FormattedText("Reps",
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        20, System.Windows.Media.Brushes.White),
+                                        new System.Windows.Point(this.displayWidth - 132, 100)
+                                    );
+                            drawingContext.DrawText(
+                                        new FormattedText(" " + (int)reps / 4,
+                                        CultureInfo.GetCultureInfo("en-us"),
+                                        FlowDirection.LeftToRight,
+                                        new Typeface("Verdana"),
+                                        22, System.Windows.Media.Brushes.White),
+                                        new System.Windows.Point(this.displayWidth - 120, 130)
+                                    );
 
                             //finish, show workout results
                             if (elapsedTime.Seconds >= 41 && elapsedTime.Seconds <= 70)
@@ -1257,10 +1256,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
-        
-        private void Button_Click_Pause(object sender, RoutedEventArgs e)
+
+        public void Pausing()
         {
-           if(paused == false)
+            if (paused == false)
             {
                 paused = true;
                 stopWatch.Start();
@@ -1270,7 +1269,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 paused = false;
                 stopWatch.Stop();
             }
+        }
 
+        private void Button_Click_Pause(object sender, RoutedEventArgs e)
+        {
+            Pausing();
         }
     }
 }

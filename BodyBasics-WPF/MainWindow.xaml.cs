@@ -395,6 +395,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         this.exerciseScreen = new MoveScreen("Squat");
                         this.exerciseScreen.Show();
                         break;
+                    case "PAUSE":
+                        try
+                        {
+                            this.exerciseScreen.Pausing();
+                        }
+                        catch
+                        {
+
+                        }
+                        break;
                     case "EXIT":
                         try {
                             this.exerciseScreen.Close();
@@ -513,7 +523,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                 jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
                             }
 
-                            this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
+                            //this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
 
 
 
@@ -530,7 +540,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         /// <param name="handState">state of the hand</param>
         /// <param name="handPosition">position of the hand</param>
-        private void DrawHand(HandState handState, Point handPosition)
+        /*private void DrawHand(HandState handState, Point handPosition)
         {
             if(enable == true)
             {
@@ -567,7 +577,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             mouse_event(MOUSEEVENTF_LEFTUP, System.Windows.Forms.Control.MousePosition.X, System.Windows.Forms.Control.MousePosition.Y, 0, 0);
         }
-        
+        */
+
         /// <summary>
         /// Draws indicators to show which edges are clipping body data
         /// </summary>
@@ -638,7 +649,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             this.Close();
         }
-        private void Button_Click_Enable(object sender, RoutedEventArgs e)
+
+        /*private void Button_Click_Enable(object sender, RoutedEventArgs e)
         {
             if(enable == false)
             {
@@ -650,7 +662,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 enable = false;
                 Enable.Content = "Enable hand tracking";
             }
-        }
+        }*/
+
         private void Button_PoiterEntered_Jump(object sender, System.Windows.Input.MouseEventArgs e)
         {
             Btn_JumpingJacks.Content = "Click to Start";
