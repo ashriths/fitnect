@@ -929,34 +929,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                         22, System.Windows.Media.Brushes.White),
                                         new System.Windows.Point(this.displayWidth - 120, 130)
                                     );
-
-                            //finish, show workout results
-                            if (elapsedTime.Seconds >= 41 && elapsedTime.Seconds <= 70)
-                            {
-                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightSkyBlue, (System.Windows.Media.Pen)null,
-                                                            new System.Windows.Point(445, 65), 63.0, 63.0);
-                                drawingContext.DrawText(
-                                            new FormattedText("Good Job!",
-                                            CultureInfo.GetCultureInfo("en-us"),
-                                            FlowDirection.LeftToRight,
-                                            new Typeface("Verdana"),
-                                            20, System.Windows.Media.Brushes.White),
-                                            new System.Windows.Point(this.displayWidth - 115, 55)
-                                        );
-
-                                drawingContext.DrawEllipse(System.Windows.Media.Brushes.LightBlue, (System.Windows.Media.Pen)null,
-                                        new System.Windows.Point(this.displayWidth - 300, 180), 100.0, 40.0);
-
-                                drawingContext.DrawText(
-                                                       new FormattedText("Finish",
-                                                       CultureInfo.GetCultureInfo("en-us"),
-                                                       FlowDirection.LeftToRight,
-                                                       new Typeface("Verdana"),
-                                                       40, System.Windows.Media.Brushes.White),
-                                                       new System.Windows.Point(this.displayWidth - 360, 160)
-                                                       );
-
-                            }
                         }
 
 
