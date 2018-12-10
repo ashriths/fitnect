@@ -217,6 +217,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// </summary>
         public MoveScreen(string exerciseType)
         {
+            this.WindowState = WindowState.Maximized;
             // one sensor is currently supported
             this.kinectSensor = KinectSensor.GetDefault();
 

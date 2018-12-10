@@ -396,11 +396,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         this.exerciseScreen.Show();
                         break;
                     case "EXIT":
-                        try {
-                            this.exerciseScreen.Close();
-                        } catch {
-                            
-                        }
                         this.Close();
                         break;
 
