@@ -19,11 +19,18 @@
         </one-of>
       </item>
       <item>
-        <tag>Pause</tag>
+        <tag>PAUSE</tag>
         <one-of>
           <item> pause </item>
           <item> stop </item>
           <item> wait </item>
+        </one-of>
+      </item>
+      <item>
+        <tag>RESUME</tag>
+        <one-of>
+          <item> resume </item>
+          <item> continue </item>
         </one-of>
       </item>
       <item>

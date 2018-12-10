@@ -395,16 +395,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                         this.exerciseScreen = new MoveScreen("Squat");
                         this.exerciseScreen.Show();
                         break;
-                    case "PAUSE":
-                        try
-                        {
-                            this.exerciseScreen.Pausing();
-                        }
-                        catch
-                        {
-
-                        }
-                        break;
                     case "EXIT":
                         try {
                             this.exerciseScreen.Close();
