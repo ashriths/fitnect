@@ -1,0 +1,51 @@
+{
+    "version": 1.0,
+    "type": "FitnectExercise",
+    "name": "Squats",
+    "enableReps": false,
+    "showTimer": true,
+    "enableCalorieCounter": true,
+    "description" : "Exercise performed by sitting with the haunches close above the heels",
+    "instructions": [
+        "Stand straight with feet hip-width apart",
+        "Tighten your stomach muscles",
+        "Lower down, as if sitting",
+        "Straighten your legs",
+        "Repeat the movement"
+    ],
+    "posturesConstraints" : [
+        {
+            "type": "WARNING",
+            "text": "Keep Arm stretched out in front!",
+            "conditions" :{
+                "$or": [
+                    {"RightUpperArm" : {"$le": 40.0}}, 
+                    {"LeftUpperArm" :  {"$le": 40.0}}
+                ]
+            }
+        },
+        {
+            "type": "WARNING",
+            "text": "Keep knees bended at 90 degree!",
+            "conditions" :{
+                "$or": [
+                    {"RightKnee" : {"$le": 75.0}}, 
+                    {"RightKnee" : {"$ge": 135.0}}
+                ]
+            }
+        },
+        {
+            "type": "WARNING",
+            "text": "Keep back straight!",
+            "conditions" :{
+                "$or": [
+                    {"Back" : {"$le": 170.0}}
+                ]
+            }
+        }
+    ],
+    "stepConstraints": [{
+        "state": 0,
+        "conditions":{}
+    }]
+}

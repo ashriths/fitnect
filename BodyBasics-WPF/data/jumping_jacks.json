@@ -1,0 +1,48 @@
+{
+    "version": 1.0,
+    "type": "FitnectExercise",
+    "name": "Jumping Jacks",
+    "enableReps": true,
+    "showTimer": true,
+    "enableCalorieCounter": true,
+    "description" : "Exercise performed from a standing position by jumping to a position with legs spread and arms raised and then to the original position",
+    "instructions": [
+        "Stand with feet together, knees slightly bent, and arms to sides.",
+        "Jump while raising arms and separating legs to sides.",
+        "Land on forefoot with legs apart and arms overhead.",
+        "Jump again while lower arms and returning legs to midline."
+    ],
+    "posturesConstraints" : [
+        {
+            "type": "WARNING",
+            "text": "Keep Arm straight!",
+            "conditions" :{
+                "$and": [
+                    {"RightArm" : {"$le": 110.0}}, 
+                    {"LeftArm" :  {"$le": 110.0}}
+                ]
+            }
+        }
+    ],
+    "stepConstraints": [{
+        "state": 0,
+        "conditions": {
+            "$and": [
+                {"RightShoulder": {"$le": 140.00}},
+                {"LeftShoulder": {"$le": 140.00}},
+                {"RightHip": {"$ge": 80.00}},
+                {"LeftHip": {"$ge": 80.00}}
+            ]
+        }
+    }, {
+        "state": 1,
+        "conditions": {
+            "$and": [
+                {"RightShoulder": {"$ge": 140.00}},
+                {"LeftShoulder": {"$ge": 140.00}},
+                {"RightHip": {"$le": 80.00}},
+                {"LeftHip": {"$le": 80.00}}
+            ]
+        }
+    }]
+}
